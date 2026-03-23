@@ -8,23 +8,27 @@
     <style>
         body { font-family: 'Georgia', serif; background: #f4e4bc; color: #2c1e16; padding: 20px; }
         .sheet { border: 2px solid #8b4513; padding: 15px; border-radius: 10px; background: #fff9eb; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-        h1 { text-align: center; border-bottom: 2px solid #8b4513; margin-top: 0; }
+        h1 { text-align: center; border-bottom: 2px solid #8b4513; margin-top: 0; margin-bottom: 5px; }
+        .level-header { text-align: center; font-size: 16px; font-weight: bold; color: #5a2e0c; margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-box { background: #8b4513; color: white; text-align: center; padding: 5px; border-radius: 5px; }
         .stat-value { font-size: 20px; font-weight: bold; }
         .label { font-size: 12px; text-transform: uppercase; }
-        .info-row { margin: 5px 0; border-bottom: 1px dashed #ccc; }
-        .section-title { font-weight: bold; color: #8b4513; margin-top: 10px; display: block; }
+        .info-row { margin: 5px 0; border-bottom: 1px dashed #ccc; padding-bottom: 3px;}
+        .section-title { font-weight: bold; color: #8b4513; margin-top: 15px; display: block; border-bottom: 1px solid #8b4513; margin-bottom: 5px;}
     </style>
 </head>
 <body>
     <div class="sheet">
         <h1 id="name">Герой</h1>
-      <div class="grid">
+        <div class="level-header">Рівень: <span id="level">-</span> | XP: <span id="xp">-</span></div>
+        
+        <div class="grid">
             <div class="info-row"><b>Раса:</b> <span id="race">-</span></div>
             <div class="info-row"><b>Клас:</b> <span id="class">-</span></div>
             <div class="info-row"><b>ХП:</b> <span id="hp">-</span></div>
             <div class="info-row"><b>AC:</b> <span id="ac">-</span></div>
+            <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
             <div class="info-row"><b>Золото:</b> <span id="gold">0</span> зм</div>
             
             <div class="info-row" style="grid-column: span 2; border-bottom: 2px dashed #8b4513; margin-top: 5px;">
@@ -38,10 +42,10 @@
         
         <div class="section-title">Характеристики</div>
         <div class="grid" id="stats-grid">
-            </div>
+        </div>
 
         <div class="section-title">Інвентар та Навички</div>
-        <p id="details" style="font-size: 14px; white-space: pre-wrap;"></p>
+        <p id="inventory" style="font-size: 14px; white-space: pre-wrap;"></p>
     </div>
 
     <script>
@@ -50,25 +54,42 @@
 
         // Отримуємо дані з URL
         const params = new URLSearchParams(window.location.search);
-        const data = JSON.parse(decodeURIComponent(params.get("data")));
+        const dataParam = params.get("data");
 
-        if (data) {
-            document.getElementById('name').innerText = data.name;
-            document.getElementById('race').innerText = data.race;
-            document.getElementById('class').innerText = data.class;
-            document.getElementById('hp').innerText = data.hp;
-            document.getElementById('ac').innerText = data.ac;
-            document.getElementById('details').innerText = data.details;
-            document.getElementById('gold').innerText = data.gold || "0";
-            document.getElementById('spells').innerText = data.spells || "Немає магії";
+        if (dataParam) {
+            try {
+                const data = JSON.parse(decodeURIComponent(dataParam));
+                
+                document.getElementById('name').innerText = data.name || "Невідомо";
+                document.getElementById('level').innerText = data.level || "1";
+                document.getElementById('xp').innerText = data.xp || "0/300";
+                document.getElementById('race').innerText = data.race || "-";
+                document.getElementById('class').innerText = data.class || "-";
+                document.getElementById('hp').innerText = data.hp || "-";
+                document.getElementById('ac').innerText = data.ac || "-";
+                document.getElementById('speed').innerText = data.speed || "-";
+                document.getElementById('inventory').innerText = data.inventory || "Порожньо";
+                document.getElementById('gold').innerText = data.gold || "0";
+                document.getElementById('spells').innerText = data.spells || "Немає магії";
 
-            const statsGrid = document.getElementById('stats-grid');
-            for (const [key, value] of Object.entries(data.stats)) {
-                statsGrid.innerHTML += `
-                    <div class="stat-box">
-                        <div class="stat-value">${value}</div>
-                        <div class="label">${key}</div>
-                    </div>`;
+                if (data.death_saves) {
+                    document.getElementById('death-saves').innerText = data.death_saves;
+                }
+
+                const statsGrid = document.getElementById('stats-grid');
+                statsGrid.innerHTML = ''; // Очищаємо перед заповненням
+                if (data.stats) {
+                    for (const [key, value] of Object.entries(data.stats)) {
+                        statsGrid.innerHTML += `
+                            <div class="stat-box">
+                                <div class="stat-value">${value}</div>
+                                <div class="label">${key}</div>
+                            </div>`;
+                    }
+                }
+            } catch (e) {
+                console.error("Помилка парсингу JSON:", e);
+                document.getElementById('name').innerText = "Помилка завантаження";
             }
         }
     </script>
