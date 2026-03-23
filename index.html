@@ -72,10 +72,14 @@
             margin-bottom: 10px;
             font-size: 18px;
         }
-        .inventory-text {
+        .text-block {
             font-size: 14px; 
             white-space: pre-wrap; 
             line-height: 1.5;
+            background: rgba(139, 69, 19, 0.05);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid rgba(139, 69, 19, 0.2);
         }
         .danger-text {
             color: #8b0000;
@@ -95,7 +99,7 @@
             <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
             <div class="info-row"><b>Золото:</b> <span id="gold">0</span> зм</div>
             
-            <div class="info-row" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px;">
+            <div id="magic-section" class="info-row" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px;">
                 <b>Магія та Комірки:</b><br>
                 <span id="spells">-</span>
             </div>
@@ -106,28 +110,30 @@
         </div>
         
         <div class="section-title">Характеристики</div>
-        <div class="grid" id="stats-grid">
-            </div>
+        <div class="grid" id="stats-grid"></div>
 
-        <div class="section-title">Інвентар та Навички</div>
-        <div class="inventory-text" id="inventory">Порожньо</div>
+        <div class="section-title">Екіпірування</div>
+        <div class="text-block" id="equipped">Порожньо</div>
+
+        <div class="section-title">Рюкзак (Інвентар)</div>
+        <div class="text-block" id="inventory">Порожньо</div>
+
+        <div class="section-title">Навички та Риси</div>
+        <div class="text-block" id="skills">Порожньо</div>
     </div>
 
     <script>
-        // Ініціалізація Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand(); 
 
-        // Отримуємо параметри з URL
         const params = new URLSearchParams(window.location.search);
-        const dataParam = params.get("data"); // Старий формат
-        const b64Param = params.get("b64");   // Новий заархівований формат
+        const dataParam = params.get("data");
+        const b64Param = params.get("b64");
 
         let sheetData = null;
 
         try {
             if (b64Param) {
-                // Магія розпаковки Base64 з підтримкою кирилиці
                 const decodedStr = decodeURIComponent(escape(atob(b64Param)));
                 sheetData = JSON.parse(decodedStr);
             } else if (dataParam) {
@@ -143,9 +149,21 @@
                 document.getElementById('hp').innerText = sheetData.hp || "-";
                 document.getElementById('ac').innerText = sheetData.ac || "-";
                 document.getElementById('speed').innerText = sheetData.speed || "-";
-                document.getElementById('inventory').innerText = sheetData.inventory || "Порожньо";
                 document.getElementById('gold').innerText = sheetData.gold || "0";
-                document.getElementById('spells').innerText = sheetData.spells || "Немає магії";
+                
+                // Заповнення нових блоків
+                document.getElementById('equipped').innerText = sheetData.equipped || "Нічого не екіпіровано";
+                document.getElementById('inventory').innerText = sheetData.inventory || "Порожньо";
+                document.getElementById('skills').innerText = sheetData.skills || "Немає навичок";
+
+                // Логіка приховування магії
+                const spellText = sheetData.spells || "";
+                if (!spellText || spellText.toLowerCase().includes("немає магії") || spellText.toLowerCase().includes("немає")) {
+                    document.getElementById('magic-section').style.display = 'none';
+                } else {
+                    document.getElementById('magic-section').style.display = 'block';
+                    document.getElementById('spells').innerText = spellText;
+                }
 
                 if (sheetData.death_saves) {
                     document.getElementById('death-saves').innerText = sheetData.death_saves;
@@ -168,7 +186,6 @@
         } catch (e) {
             console.error("Помилка парсингу JSON:", e);
             document.getElementById('name').innerText = "Помилка завантаження";
-            document.getElementById('inventory').innerText = "Не вдалося розшифрувати дані картки. Спробуйте оновити картку в боті.";
         }
     </script>
 </body>
