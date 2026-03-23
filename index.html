@@ -1,26 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D&D Character Sheet</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Georgia', serif; background: #f4e4bc; color: #2c1e16; padding: 20px; }
-        .sheet { border: 2px solid #8b4513; padding: 15px; border-radius: 10px; background: #fff9eb; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-        h1 { text-align: center; border-bottom: 2px solid #8b4513; margin-top: 0; margin-bottom: 5px; }
-        .level-header { text-align: center; font-size: 16px; font-weight: bold; color: #5a2e0c; margin-bottom: 15px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-box { background: #8b4513; color: white; text-align: center; padding: 5px; border-radius: 5px; }
-        .stat-value { font-size: 20px; font-weight: bold; }
-        .label { font-size: 12px; text-transform: uppercase; }
-        .info-row { margin: 5px 0; border-bottom: 1px dashed #ccc; padding-bottom: 3px;}
-        .section-title { font-weight: bold; color: #8b4513; margin-top: 15px; display: block; border-bottom: 1px solid #8b4513; margin-bottom: 5px;}
+        body { 
+            font-family: 'Georgia', serif; 
+            background: #f4e4bc; 
+            color: #2c1e16; 
+            padding: 15px; 
+            margin: 0;
+        }
+        .sheet { 
+            border: 2px solid #8b4513; 
+            padding: 15px; 
+            border-radius: 10px; 
+            background: #fff9eb; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.3); 
+        }
+        h1 { 
+            text-align: center; 
+            border-bottom: 2px solid #8b4513; 
+            margin-top: 0; 
+            margin-bottom: 5px; 
+            font-size: 24px;
+        }
+        .level-header { 
+            text-align: center; 
+            font-size: 16px; 
+            font-weight: bold; 
+            color: #5a2e0c; 
+            margin-bottom: 15px; 
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+        .stat-box { 
+            background: #8b4513; 
+            color: white; 
+            text-align: center; 
+            padding: 8px 5px; 
+            border-radius: 5px; 
+            border: 1px solid #5a2e0c;
+        }
+        .stat-value { 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        .label { 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            margin-top: 3px;
+        }
+        .info-row { 
+            margin: 5px 0; 
+            border-bottom: 1px dashed #dcb889; 
+            padding-bottom: 4px;
+            font-size: 14px;
+        }
+        .section-title { 
+            font-weight: bold; 
+            color: #8b4513; 
+            margin-top: 20px; 
+            display: block; 
+            border-bottom: 2px solid #8b4513; 
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .inventory-text {
+            font-size: 14px; 
+            white-space: pre-wrap; 
+            line-height: 1.5;
+        }
+        .danger-text {
+            color: #8b0000;
+        }
     </style>
 </head>
 <body>
     <div class="sheet">
-        <h1 id="name">Герой</h1>
+        <h1 id="name">Завантаження...</h1>
         <div class="level-header">Рівень: <span id="level">-</span> | XP: <span id="xp">-</span></div>
         
         <div class="grid">
@@ -31,55 +95,66 @@
             <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
             <div class="info-row"><b>Золото:</b> <span id="gold">0</span> зм</div>
             
-            <div class="info-row" style="grid-column: span 2; border-bottom: 2px dashed #8b4513; margin-top: 5px;">
-                <b>Магія та Комірки:</b> <span id="spells">-</span>
+            <div class="info-row" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px;">
+                <b>Магія та Комірки:</b><br>
+                <span id="spells">-</span>
             </div>
             
-            <div class="info-row" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px; color: darkred;">
-                <b>Рятівні кидки від смерті:</b> <span id="death-saves">Успіхи: 0/3 | Провали: 0/3</span>
+            <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px;">
+                <b>Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
             </div>
         </div>
         
         <div class="section-title">Характеристики</div>
         <div class="grid" id="stats-grid">
-        </div>
+            </div>
 
         <div class="section-title">Інвентар та Навички</div>
-        <p id="inventory" style="font-size: 14px; white-space: pre-wrap;"></p>
+        <div class="inventory-text" id="inventory">Порожньо</div>
     </div>
 
     <script>
+        // Ініціалізація Telegram WebApp
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Розгорнути на весь екран
+        tg.expand(); 
 
-        // Отримуємо дані з URL
+        // Отримуємо параметри з URL
         const params = new URLSearchParams(window.location.search);
-        const dataParam = params.get("data");
+        const dataParam = params.get("data"); // Старий формат
+        const b64Param = params.get("b64");   // Новий заархівований формат
 
-        if (dataParam) {
-            try {
-                const data = JSON.parse(decodeURIComponent(dataParam));
-                
-                document.getElementById('name').innerText = data.name || "Невідомо";
-                document.getElementById('level').innerText = data.level || "1";
-                document.getElementById('xp').innerText = data.xp || "0/300";
-                document.getElementById('race').innerText = data.race || "-";
-                document.getElementById('class').innerText = data.class || "-";
-                document.getElementById('hp').innerText = data.hp || "-";
-                document.getElementById('ac').innerText = data.ac || "-";
-                document.getElementById('speed').innerText = data.speed || "-";
-                document.getElementById('inventory').innerText = data.inventory || "Порожньо";
-                document.getElementById('gold').innerText = data.gold || "0";
-                document.getElementById('spells').innerText = data.spells || "Немає магії";
+        let sheetData = null;
 
-                if (data.death_saves) {
-                    document.getElementById('death-saves').innerText = data.death_saves;
+        try {
+            if (b64Param) {
+                // Магія розпаковки Base64 з підтримкою кирилиці
+                const decodedStr = decodeURIComponent(escape(atob(b64Param)));
+                sheetData = JSON.parse(decodedStr);
+            } else if (dataParam) {
+                sheetData = JSON.parse(decodeURIComponent(dataParam));
+            }
+            
+            if (sheetData) {
+                document.getElementById('name').innerText = sheetData.name || "Невідомо";
+                document.getElementById('level').innerText = sheetData.level || "1";
+                document.getElementById('xp').innerText = sheetData.xp || "0/300";
+                document.getElementById('race').innerText = sheetData.race || "-";
+                document.getElementById('class').innerText = sheetData.class || "-";
+                document.getElementById('hp').innerText = sheetData.hp || "-";
+                document.getElementById('ac').innerText = sheetData.ac || "-";
+                document.getElementById('speed').innerText = sheetData.speed || "-";
+                document.getElementById('inventory').innerText = sheetData.inventory || "Порожньо";
+                document.getElementById('gold').innerText = sheetData.gold || "0";
+                document.getElementById('spells').innerText = sheetData.spells || "Немає магії";
+
+                if (sheetData.death_saves) {
+                    document.getElementById('death-saves').innerText = sheetData.death_saves;
                 }
 
                 const statsGrid = document.getElementById('stats-grid');
-                statsGrid.innerHTML = ''; // Очищаємо перед заповненням
-                if (data.stats) {
-                    for (const [key, value] of Object.entries(data.stats)) {
+                statsGrid.innerHTML = ''; 
+                if (sheetData.stats) {
+                    for (const [key, value] of Object.entries(sheetData.stats)) {
                         statsGrid.innerHTML += `
                             <div class="stat-box">
                                 <div class="stat-value">${value}</div>
@@ -87,10 +162,13 @@
                             </div>`;
                     }
                 }
-            } catch (e) {
-                console.error("Помилка парсингу JSON:", e);
-                document.getElementById('name').innerText = "Помилка завантаження";
+            } else {
+                document.getElementById('name').innerText = "Дані відсутні";
             }
+        } catch (e) {
+            console.error("Помилка парсингу JSON:", e);
+            document.getElementById('name').innerText = "Помилка завантаження";
+            document.getElementById('inventory').innerText = "Не вдалося розшифрувати дані картки. Спробуйте оновити картку в боті.";
         }
     </script>
 </body>
