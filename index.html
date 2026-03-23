@@ -81,6 +81,9 @@
             border-radius: 5px;
             border: 1px solid rgba(139, 69, 19, 0.2);
         }
+        .actions-block {
+            border-left: 4px solid #8b0000; /* Червона лінія для акценту на атаках */
+        }
         .danger-text {
             color: #8b0000;
         }
@@ -112,13 +115,16 @@
         <div class="section-title">Характеристики</div>
         <div class="grid" id="stats-grid"></div>
 
+        <div class="section-title">Активні здібності та Атаки</div>
+        <div class="text-block actions-block" id="actions">Порожньо</div>
+
         <div class="section-title">Екіпірування</div>
         <div class="text-block" id="equipped">Порожньо</div>
 
         <div class="section-title">Рюкзак (Інвентар)</div>
         <div class="text-block" id="inventory">Порожньо</div>
 
-        <div class="section-title">Навички та Риси</div>
+        <div class="section-title">Пасивні Навички та Риси</div>
         <div class="text-block" id="skills">Порожньо</div>
     </div>
 
@@ -151,12 +157,11 @@
                 document.getElementById('speed').innerText = sheetData.speed || "-";
                 document.getElementById('gold').innerText = sheetData.gold || "0";
                 
-                // Заповнення нових блоків
+                document.getElementById('actions').innerText = sheetData.actions || "Немає активних дій";
                 document.getElementById('equipped').innerText = sheetData.equipped || "Нічого не екіпіровано";
                 document.getElementById('inventory').innerText = sheetData.inventory || "Порожньо";
-                document.getElementById('skills').innerText = sheetData.skills || "Немає навичок";
+                document.getElementById('skills').innerText = sheetData.skills || "Немає пасивних навичок";
 
-                // Логіка приховування магії
                 const spellText = sheetData.spells || "";
                 if (!spellText || spellText.toLowerCase().includes("немає магії") || spellText.toLowerCase().includes("немає")) {
                     document.getElementById('magic-section').style.display = 'none';
