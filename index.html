@@ -200,7 +200,8 @@
                 
                 document.getElementById('gold').innerText = sheetData.gold || "0 зм, 0 см, 0 мм";
                 
-                if (sheetData.inspiration === "1") {
+                // ВИПРАВЛЕНО: перевірка натхнення з урахуванням того, що ШІ може повернути число 1 замість рядка "1"
+                if (String(sheetData.inspiration).trim() === "1") {
                     document.getElementById('inspiration').style.display = "inline-block";
                 } else {
                     document.getElementById('inspiration').style.display = "none";
