@@ -33,6 +33,21 @@
             font-weight: bold; 
             color: #5a2e0c; 
             margin-bottom: 15px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .inspiration-badge {
+            background: #ffd700;
+            color: #8b4513;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+            border: 1px solid #c5a000;
+            display: none;
         }
         .grid { 
             display: grid; 
@@ -82,17 +97,36 @@
             border: 1px solid rgba(139, 69, 19, 0.2);
         }
         .actions-block {
-            border-left: 4px solid #8b0000; /* Червона лінія для акценту на атаках */
+            border-left: 4px solid #8b0000;
         }
         .danger-text {
             color: #8b0000;
+        }
+        .spell-slots {
+            background: #e6f2ff;
+            border: 1px solid #b3d9ff;
+            padding: 6px;
+            border-radius: 5px;
+            color: #005580;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+            display: none; /* Приховано за замовчуванням */
+        }
+        .magic-bg {
+            background: rgba(75, 0, 130, 0.05);
+            border-color: rgba(75, 0, 130, 0.2);
+            border-left: 4px solid #4b0082;
         }
     </style>
 </head>
 <body>
     <div class="sheet">
         <h1 id="name">Завантаження...</h1>
-        <div class="level-header">Рівень: <span id="level">-</span> | XP: <span id="xp">-</span></div>
+        <div class="level-header">
+            <span>Рівень: <span id="level">-</span> | XP: <span id="xp">-</span></span>
+            <span id="inspiration" class="inspiration-badge">🌟 Натхнення</span>
+        </div>
         
         <div class="grid">
             <div class="info-row"><b>Раса:</b> <span id="race">-</span></div>
@@ -100,12 +134,7 @@
             <div class="info-row"><b>ХП:</b> <span id="hp">-</span></div>
             <div class="info-row"><b>AC:</b> <span id="ac">-</span></div>
             <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
-            <div class="info-row"><b>Золото:</b> <span id="gold">0</span> зм</div>
-            
-            <div id="magic-section" class="info-row" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px;">
-                <b>Магія та Комірки:</b><br>
-                <span id="spells">-</span>
-            </div>
+            <div class="info-row"><b>Гаманець:</b> <span id="gold">0 зм, 0 см, 0 мм</span></div>
             
             <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px;">
                 <b>Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
@@ -117,6 +146,12 @@
 
         <div class="section-title">Активні здібності та Атаки</div>
         <div class="text-block actions-block" id="actions">Порожньо</div>
+
+        <div id="magic-section" style="display: none;">
+            <div class="section-title">Магія</div>
+            <div id="spell-slots" class="spell-slots">-</div>
+            <div class="text-block magic-bg" id="spells">Немає магії</div>
+        </div>
 
         <div class="section-title">Екіпірування</div>
         <div class="text-block" id="equipped">Порожньо</div>
@@ -155,19 +190,36 @@
                 document.getElementById('hp').innerText = sheetData.hp || "-";
                 document.getElementById('ac').innerText = sheetData.ac || "-";
                 document.getElementById('speed').innerText = sheetData.speed || "-";
-                document.getElementById('gold').innerText = sheetData.gold || "0";
+                
+                document.getElementById('gold').innerText = sheetData.gold || "0 зм, 0 см, 0 мм";
+                
+                if (sheetData.inspiration === "1") {
+                    document.getElementById('inspiration').style.display = "inline-block";
+                } else {
+                    document.getElementById('inspiration').style.display = "none";
+                }
                 
                 document.getElementById('actions').innerText = sheetData.actions || "Немає активних дій";
                 document.getElementById('equipped').innerText = sheetData.equipped || "Нічого не екіпіровано";
                 document.getElementById('inventory').innerText = sheetData.inventory || "Порожньо";
                 document.getElementById('skills').innerText = sheetData.skills || "Немає пасивних навичок";
 
+                // ОБРОБКА МАГІЇ ТА КОМІРОК
                 const spellText = sheetData.spells || "";
+                const spellSlots = sheetData.spell_slots || "";
+                
                 if (!spellText || spellText.toLowerCase().includes("немає магії") || spellText.toLowerCase().includes("немає")) {
                     document.getElementById('magic-section').style.display = 'none';
                 } else {
                     document.getElementById('magic-section').style.display = 'block';
                     document.getElementById('spells').innerText = spellText;
+                    
+                    if (spellSlots && spellSlots !== "-") {
+                        document.getElementById('spell-slots').innerText = "Комірки заклинань: " + spellSlots;
+                        document.getElementById('spell-slots').style.display = "block";
+                    } else {
+                        document.getElementById('spell-slots').style.display = "none";
+                    }
                 }
 
                 if (sheetData.death_saves) {
