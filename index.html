@@ -37,17 +37,25 @@
             justify-content: center;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
+        /* Оновлений дизайн Натхнення */
         .inspiration-badge {
-            background: #ffd700;
-            color: #8b4513;
+            background: #e2d8c3; /* Сірий неактивний колір */
+            color: #7a6b58;
             padding: 3px 8px;
             border-radius: 12px;
             font-size: 13px;
             font-weight: bold;
+            border: 1px solid #c9bda5;
+            display: inline-block; /* Тепер завжди видно */
+            transition: all 0.3s ease;
+        }
+        .inspiration-badge.active {
+            background: #ffd700; /* Золотий активний колір */
+            color: #8b4513;
             box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
             border: 1px solid #c5a000;
-            display: none;
         }
         .grid { 
             display: grid; 
@@ -115,7 +123,7 @@
             font-weight: bold;
             margin-bottom: 8px;
             font-size: 14px;
-            display: none; /* Приховано за замовчуванням */
+            display: none;
         }
         .magic-bg {
             background: rgba(75, 0, 130, 0.05);
@@ -129,7 +137,7 @@
         <h1 id="name">Завантаження...</h1>
         <div class="level-header">
             <span>Рівень: <span id="level">-</span> | XP: <span id="xp">-</span></span>
-            <span id="inspiration" class="inspiration-badge">🌟 Натхнення</span>
+            <span id="inspiration" class="inspiration-badge">🌟 Натхнення: 0</span>
         </div>
         
         <div class="grid">
@@ -200,22 +208,22 @@
                 
                 document.getElementById('gold').innerText = sheetData.gold || "0 зм, 0 см, 0 мм";
                 
-                // ВИПРАВЛЕНО: перевірка натхнення з урахуванням того, що ШІ може повернути число 1 замість рядка "1"
+                // НОВА ЛОГІКА НАТХНЕННЯ: Відображається завжди, змінюється стиль
+                const inspElement = document.getElementById('inspiration');
                 if (String(sheetData.inspiration).trim() === "1") {
-                    document.getElementById('inspiration').style.display = "inline-block";
+                    inspElement.innerText = "🌟 Натхнення: 1";
+                    inspElement.className = "inspiration-badge active";
                 } else {
-                    document.getElementById('inspiration').style.display = "none";
+                    inspElement.innerText = "🌟 Натхнення: 0";
+                    inspElement.className = "inspiration-badge";
                 }
                 
-                // НОВИЙ ПУНКТ: БЕКГРАУНД
                 document.getElementById('background').innerText = sheetData.background || "Немає інформації";
-                
                 document.getElementById('actions').innerText = sheetData.actions || "Немає активних дій";
                 document.getElementById('equipped').innerText = sheetData.equipped || "Нічого не екіпіровано";
                 document.getElementById('inventory').innerText = sheetData.inventory || "Порожньо";
                 document.getElementById('skills').innerText = sheetData.skills || "Немає пасивних навичок";
 
-                // ОБРОБКА МАГІЇ ТА КОМІРОК
                 const spellText = sheetData.spells || "";
                 const spellSlots = sheetData.spell_slots || "";
                 
