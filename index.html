@@ -117,6 +117,17 @@
             font-size: 14px;
         }
         .magic-bg { border-left: 4px solid #4b0082; background: rgba(75, 0, 130, 0.05); }
+        
+        /* Стиль для нового поля Статусу */
+        .status-row {
+            grid-column: span 2; 
+            border-top: 2px solid #8b4513; 
+            margin-top: 5px; 
+            padding-top: 5px;
+            color: #d35400; 
+            font-weight: bold;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -135,6 +146,10 @@
             <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
             <div class="info-row"><b>Золото:</b> <span id="gold">-</span></div>
             
+            <div class="info-row status-row">
+                <b>Стан:</b> <span id="status">Нормальний</span>
+            </div>
+
             <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513;">
                 <b>Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
             </div>
@@ -189,6 +204,9 @@
                 document.getElementById('gold').innerText = data.gold || "0";
                 document.getElementById('death-saves').innerText = data.death_saves || "-";
 
+                // Оновлення поля СТАТУСУ (голод, виснаження)
+                document.getElementById('status').innerText = data.status || "Нормальний";
+
                 // Натхнення (візуальний статус)
                 const insp = document.getElementById('inspiration');
                 if (String(data.inspiration) === "1") {
@@ -219,7 +237,7 @@
                     });
                 }
 
-                // Секція магії (Алгоритм 14)
+                // Секція магія
                 const magicSec = document.getElementById('magic-section');
                 const slots = document.getElementById('spell-slots');
                 const spells = document.getElementById('spells');
