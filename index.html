@@ -140,6 +140,21 @@
             font-size: 14px;
         }
         .magic-bg { border-left: 4px solid #4b0082; background: rgba(75, 0, 130, 0.05); }
+
+        /* Стиль для секретної Карти */
+        .map-active {
+            grid-column: span 2;
+            background: #e8d0a9;
+            border: 2px dashed #8b4513;
+            color: #4a5c44;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -160,8 +175,12 @@
             <div class="info-row"><b>Клас:</b> <span id="class">-</span></div>
             <div class="info-row"><b>ХП:</b> <span id="hp">-</span></div>
             <div class="info-row"><b>AC:</b> <span id="ac">-</span></div>
-            <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
-            <div class="info-row"><b>Золото:</b> <span id="gold">-</span></div>
+            <div class="info-row" style="grid-column: span 2;"><b>Золото:</b> <span id="gold">-</span></div>
+            
+            <div id="location-box" class="map-active" style="display: none;">
+                🗺️ <b>GPS Навігація (Мапа активна):</b><br>
+                <span id="location-text" style="font-weight: normal;">-</span>
+            </div>
             
             <div class="status-row">
                 <b>Стан:</b> <span id="status">Завантаження...</span>
@@ -222,12 +241,19 @@
                 document.getElementById('class').innerText = data.class || "-";
                 document.getElementById('hp').innerText = data.hp || "-";
                 document.getElementById('ac').innerText = data.ac || "-";
-                document.getElementById('speed').innerText = data.speed || "-";
                 document.getElementById('gold').innerText = data.gold || "0";
                 document.getElementById('death-saves').innerText = data.death_saves || "-";
 
                 // Оновлення Статусу (Авто-їжа/Виснаження)
                 document.getElementById('status').innerText = data.status || "Нормальний";
+
+                // ЛОГІКА ТУМАНУ ВІЙНИ: Відображаємо локацію, ТІЛЬКИ якщо є карта
+                const invText = (data.inventory || "").toLowerCase();
+                const eqpText = (data.equipped || "").toLowerCase();
+                if ((invText.includes("карт") || invText.includes("мап") || eqpText.includes("карт") || eqpText.includes("мап")) && data.gm_tracker) {
+                    document.getElementById('location-box').style.display = 'block';
+                    document.getElementById('location-text').innerText = data.gm_tracker;
+                }
 
                 // Логіка Натхнення (Алгоритм 17)
                 const insp = document.getElementById('inspiration');
