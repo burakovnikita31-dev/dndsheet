@@ -27,6 +27,16 @@
             margin-bottom: 5px; 
             font-size: 24px;
         }
+        /* Календар та Вік */
+        .meta-header {
+            text-align: center;
+            font-size: 13px;
+            color: #8b4513;
+            margin-bottom: 10px;
+            font-style: italic;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.3);
+            padding-bottom: 5px;
+        }
         .level-header { 
             text-align: center; 
             font-size: 16px; 
@@ -106,6 +116,19 @@
         .actions-block { border-left: 4px solid #8b0000; }
         .background-block { border-left: 4px solid #b8860b; background: rgba(184, 134, 11, 0.05); }
         .danger-text { color: #8b0000; }
+        
+        /* Статус (Виснаження/Голод) */
+        .status-row {
+            grid-column: span 2; 
+            border-top: 2px solid #8b4513; 
+            margin-top: 5px; 
+            padding-top: 8px;
+            color: #d35400; 
+            font-weight: bold;
+            text-align: center;
+            font-size: 15px;
+        }
+
         .spell-slots {
             background: #e6f2ff;
             border: 1px solid #b3d9ff;
@@ -117,22 +140,16 @@
             font-size: 14px;
         }
         .magic-bg { border-left: 4px solid #4b0082; background: rgba(75, 0, 130, 0.05); }
-        
-        /* Стиль для нового поля Статусу */
-        .status-row {
-            grid-column: span 2; 
-            border-top: 2px solid #8b4513; 
-            margin-top: 5px; 
-            padding-top: 5px;
-            color: #d35400; 
-            font-weight: bold;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
     <div class="sheet">
         <h1 id="name">Завантаження...</h1>
+        
+        <div class="meta-header">
+            📅 <span id="date">Завантаження дати...</span> | 👤 Вік: <span id="age">-</span>
+        </div>
+
         <div class="level-header">
             <span>Рівень: <span id="level">-</span> | XP: <span id="xp">-</span></span>
             <span id="inspiration" class="inspiration-badge">🌟 Натхнення: 0</span>
@@ -146,8 +163,8 @@
             <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
             <div class="info-row"><b>Золото:</b> <span id="gold">-</span></div>
             
-            <div class="info-row status-row">
-                <b>Стан:</b> <span id="status">Нормальний</span>
+            <div class="status-row">
+                <b>Стан:</b> <span id="status">Завантаження...</span>
             </div>
 
             <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513;">
@@ -189,10 +206,15 @@
 
         try {
             if (b64Param) {
+                // Декодування Base64 для Telegram
                 const decodedStr = decodeURIComponent(escape(atob(b64Param)));
                 const data = JSON.parse(decodedStr);
                 
-                // Заповнення базових полів
+                // Відображення Дати та Віку (Алгоритм 8 та 13)
+                document.getElementById('date').innerText = data.date || "Дата невідома";
+                document.getElementById('age').innerText = data.age || "-";
+                
+                // Заповнення основних полів
                 document.getElementById('name').innerText = data.name || "Герой";
                 document.getElementById('level').innerText = data.level || "1";
                 document.getElementById('xp').innerText = data.xp || "0";
@@ -204,10 +226,10 @@
                 document.getElementById('gold').innerText = data.gold || "0";
                 document.getElementById('death-saves').innerText = data.death_saves || "-";
 
-                // Оновлення поля СТАТУСУ (голод, виснаження)
+                // Оновлення Статусу (Авто-їжа/Виснаження)
                 document.getElementById('status').innerText = data.status || "Нормальний";
 
-                // Натхнення (візуальний статус)
+                // Логіка Натхнення (Алгоритм 17)
                 const insp = document.getElementById('inspiration');
                 if (String(data.inspiration) === "1") {
                     insp.innerText = "🌟 Натхнення: 1";
@@ -217,14 +239,14 @@
                     insp.className = "inspiration-badge";
                 }
 
-                // Текстові блоки
+                // Текстові блоки (Алгоритм 13)
                 document.getElementById('background').innerText = data.background || "-";
                 document.getElementById('actions').innerText = data.actions || "-";
                 document.getElementById('equipped').innerText = data.equipped || "-";
                 document.getElementById('inventory').innerText = data.inventory || "-";
                 document.getElementById('skills').innerText = data.skills || "-";
 
-                // Динамічні характеристики
+                // Генерація Характеристик
                 const statsGrid = document.getElementById('stats-grid');
                 statsGrid.innerHTML = '';
                 if (data.stats) {
@@ -237,7 +259,7 @@
                     });
                 }
 
-                // Секція магія
+                // Логіка Магії (Алгоритм 14)
                 const magicSec = document.getElementById('magic-section');
                 const slots = document.getElementById('spell-slots');
                 const spells = document.getElementById('spells');
