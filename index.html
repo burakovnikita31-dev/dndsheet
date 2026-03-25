@@ -39,20 +39,19 @@
             gap: 8px;
             flex-wrap: wrap;
         }
-        /* Оновлений дизайн Натхнення */
         .inspiration-badge {
-            background: #e2d8c3; /* Сірий неактивний колір */
+            background: #e2d8c3;
             color: #7a6b58;
             padding: 3px 8px;
             border-radius: 12px;
             font-size: 13px;
             font-weight: bold;
             border: 1px solid #c9bda5;
-            display: inline-block; /* Тепер завжди видно */
+            display: inline-block;
             transition: all 0.3s ease;
         }
         .inspiration-badge.active {
-            background: #ffd700; /* Золотий активний колір */
+            background: #ffd700;
             color: #8b4513;
             box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
             border: 1px solid #c5a000;
@@ -104,16 +103,9 @@
             border-radius: 5px;
             border: 1px solid rgba(139, 69, 19, 0.2);
         }
-        .actions-block {
-            border-left: 4px solid #8b0000;
-        }
-        .background-block {
-            border-left: 4px solid #b8860b;
-            background: rgba(184, 134, 11, 0.05);
-        }
-        .danger-text {
-            color: #8b0000;
-        }
+        .actions-block { border-left: 4px solid #8b0000; }
+        .background-block { border-left: 4px solid #b8860b; background: rgba(184, 134, 11, 0.05); }
+        .danger-text { color: #8b0000; }
         .spell-slots {
             background: #e6f2ff;
             border: 1px solid #b3d9ff;
@@ -123,13 +115,8 @@
             font-weight: bold;
             margin-bottom: 8px;
             font-size: 14px;
-            display: none;
         }
-        .magic-bg {
-            background: rgba(75, 0, 130, 0.05);
-            border-color: rgba(75, 0, 130, 0.2);
-            border-left: 4px solid #4b0082;
-        }
+        .magic-bg { border-left: 4px solid #4b0082; background: rgba(75, 0, 130, 0.05); }
     </style>
 </head>
 <body>
@@ -146,9 +133,9 @@
             <div class="info-row"><b>ХП:</b> <span id="hp">-</span></div>
             <div class="info-row"><b>AC:</b> <span id="ac">-</span></div>
             <div class="info-row"><b>Швидкість:</b> <span id="speed">-</span></div>
-            <div class="info-row"><b>Гаманець:</b> <span id="gold">0 зм, 0 см, 0 мм</span></div>
+            <div class="info-row"><b>Золото:</b> <span id="gold">-</span></div>
             
-            <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513; margin-top: 5px;">
+            <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513;">
                 <b>Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
             </div>
         </div>
@@ -157,25 +144,25 @@
         <div class="grid" id="stats-grid"></div>
 
         <div class="section-title">Бекграунд та Характер</div>
-        <div class="text-block background-block" id="background">Порожньо</div>
+        <div class="text-block background-block" id="background">-</div>
 
-        <div class="section-title">Активні здібності та Атаки</div>
-        <div class="text-block actions-block" id="actions">Порожньо</div>
+        <div class="section-title">Дії та Атаки</div>
+        <div class="text-block actions-block" id="actions">-</div>
 
         <div id="magic-section" style="display: none;">
             <div class="section-title">Магія</div>
-            <div id="spell-slots" class="spell-slots">-</div>
-            <div class="text-block magic-bg" id="spells">Немає магії</div>
+            <div id="spell-slots" class="spell-slots"></div>
+            <div class="text-block magic-bg" id="spells"></div>
         </div>
 
         <div class="section-title">Екіпірування</div>
-        <div class="text-block" id="equipped">Порожньо</div>
+        <div class="text-block" id="equipped">-</div>
 
-        <div class="section-title">Рюкзак (Інвентар)</div>
-        <div class="text-block" id="inventory">Порожньо</div>
+        <div class="section-title">Інвентар</div>
+        <div class="text-block" id="inventory">-</div>
 
-        <div class="section-title">Пасивні Навички та Риси</div>
-        <div class="text-block" id="skills">Порожньо</div>
+        <div class="section-title">Навички та Риси</div>
+        <div class="text-block" id="skills">-</div>
     </div>
 
     <script>
@@ -183,85 +170,76 @@
         tg.expand(); 
 
         const params = new URLSearchParams(window.location.search);
-        const dataParam = params.get("data");
         const b64Param = params.get("b64");
-
-        let sheetData = null;
 
         try {
             if (b64Param) {
                 const decodedStr = decodeURIComponent(escape(atob(b64Param)));
-                sheetData = JSON.parse(decodedStr);
-            } else if (dataParam) {
-                sheetData = JSON.parse(decodeURIComponent(dataParam));
-            }
-            
-            if (sheetData) {
-                document.getElementById('name').innerText = sheetData.name || "Невідомо";
-                document.getElementById('level').innerText = sheetData.level || "1";
-                document.getElementById('xp').innerText = sheetData.xp || "0/300";
-                document.getElementById('race').innerText = sheetData.race || "-";
-                document.getElementById('class').innerText = sheetData.class || "-";
-                document.getElementById('hp').innerText = sheetData.hp || "-";
-                document.getElementById('ac').innerText = sheetData.ac || "-";
-                document.getElementById('speed').innerText = sheetData.speed || "-";
+                const data = JSON.parse(decodedStr);
                 
-                document.getElementById('gold').innerText = sheetData.gold || "0 зм, 0 см, 0 мм";
-                
-                // НОВА ЛОГІКА НАТХНЕННЯ: Відображається завжди, змінюється стиль
-                const inspElement = document.getElementById('inspiration');
-                if (String(sheetData.inspiration).trim() === "1") {
-                    inspElement.innerText = "🌟 Натхнення: 1";
-                    inspElement.className = "inspiration-badge active";
+                // Заповнення базових полів
+                document.getElementById('name').innerText = data.name || "Герой";
+                document.getElementById('level').innerText = data.level || "1";
+                document.getElementById('xp').innerText = data.xp || "0";
+                document.getElementById('race').innerText = data.race || "-";
+                document.getElementById('class').innerText = data.class || "-";
+                document.getElementById('hp').innerText = data.hp || "-";
+                document.getElementById('ac').innerText = data.ac || "-";
+                document.getElementById('speed').innerText = data.speed || "-";
+                document.getElementById('gold').innerText = data.gold || "0";
+                document.getElementById('death-saves').innerText = data.death_saves || "-";
+
+                // Натхнення (візуальний статус)
+                const insp = document.getElementById('inspiration');
+                if (String(data.inspiration) === "1") {
+                    insp.innerText = "🌟 Натхнення: 1";
+                    insp.className = "inspiration-badge active";
                 } else {
-                    inspElement.innerText = "🌟 Натхнення: 0";
-                    inspElement.className = "inspiration-badge";
-                }
-                
-                document.getElementById('background').innerText = sheetData.background || "Немає інформації";
-                document.getElementById('actions').innerText = sheetData.actions || "Немає активних дій";
-                document.getElementById('equipped').innerText = sheetData.equipped || "Нічого не екіпіровано";
-                document.getElementById('inventory').innerText = sheetData.inventory || "Порожньо";
-                document.getElementById('skills').innerText = sheetData.skills || "Немає пасивних навичок";
-
-                const spellText = sheetData.spells || "";
-                const spellSlots = sheetData.spell_slots || "";
-                
-                if (!spellText || spellText.toLowerCase().includes("немає магії") || spellText.toLowerCase().includes("немає")) {
-                    document.getElementById('magic-section').style.display = 'none';
-                } else {
-                    document.getElementById('magic-section').style.display = 'block';
-                    document.getElementById('spells').innerText = spellText;
-                    
-                    if (spellSlots && spellSlots !== "-") {
-                        document.getElementById('spell-slots').innerText = "Комірки заклинань: " + spellSlots;
-                        document.getElementById('spell-slots').style.display = "block";
-                    } else {
-                        document.getElementById('spell-slots').style.display = "none";
-                    }
+                    insp.innerText = "🌟 Натхнення: 0";
+                    insp.className = "inspiration-badge";
                 }
 
-                if (sheetData.death_saves) {
-                    document.getElementById('death-saves').innerText = sheetData.death_saves;
-                }
+                // Текстові блоки
+                document.getElementById('background').innerText = data.background || "-";
+                document.getElementById('actions').innerText = data.actions || "-";
+                document.getElementById('equipped').innerText = data.equipped || "-";
+                document.getElementById('inventory').innerText = data.inventory || "-";
+                document.getElementById('skills').innerText = data.skills || "-";
 
+                // Динамічні характеристики
                 const statsGrid = document.getElementById('stats-grid');
-                statsGrid.innerHTML = ''; 
-                if (sheetData.stats) {
-                    for (const [key, value] of Object.entries(sheetData.stats)) {
+                statsGrid.innerHTML = '';
+                if (data.stats) {
+                    Object.entries(data.stats).forEach(([key, val]) => {
                         statsGrid.innerHTML += `
                             <div class="stat-box">
-                                <div class="stat-value">${value}</div>
+                                <div class="stat-value">${val}</div>
                                 <div class="label">${key}</div>
                             </div>`;
-                    }
+                    });
                 }
-            } else {
-                document.getElementById('name').innerText = "Дані відсутні";
+
+                // Секція магії (Алгоритм 14)
+                const magicSec = document.getElementById('magic-section');
+                const slots = document.getElementById('spell-slots');
+                const spells = document.getElementById('spells');
+                
+                if (data.spells && data.spells !== "Немає магії" && data.spells !== "-") {
+                    magicSec.style.display = 'block';
+                    spells.innerText = data.spells;
+                    if (data.spell_slots && data.spell_slots !== "-") {
+                        slots.innerText = "Комірки: " + data.spell_slots;
+                        slots.style.display = 'block';
+                    } else {
+                        slots.style.display = 'none';
+                    }
+                } else {
+                    magicSec.style.display = 'none';
+                }
             }
         } catch (e) {
-            console.error("Помилка парсингу JSON:", e);
-            document.getElementById('name').innerText = "Помилка завантаження";
+            document.getElementById('name').innerText = "Помилка даних";
+            console.error(e);
         }
     </script>
 </body>
