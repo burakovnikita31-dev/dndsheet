@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Журнал Квестів та Літопис</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e24;
+            --text-color: #e0e0e0;
+            --accent-color: #d4af37; /* Золотий колір D&D */
+            --border-color: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 5px;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+        }
+        .section h2 {
+            color: var(--accent-color);
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .content {
+            font-size: 15px;
+            white-space: pre-wrap; /* Зберігає перенесення рядків від ШІ */
+            color: #cccccc;
+        }
+        .empty-state {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+            display: block;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📜 Журнал Героя</h1>
+
+    <div class="section">
+        <h2>🎯 Активні Завдання</h2>
+        <div id="quests" class="content">Завантаження магічних рун...</div>
+    </div>
+
+    <div class="section">
+        <h2>🌍 Світовий Довідник</h2>
+        <div id="lore" class="content">Розшифровка літописів...</div>
+    </div>
+
+    <script>
+        // Ініціалізуємо додаток Telegram (щоб він гарно виглядав на телефоні)
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand(); // Розгортаємо на всю висоту екрану
+
+        // Функція для безпечного декодування Base64 з підтримкою кирилиці
+        function b64DecodeUnicode(str) {
+            try {
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) {
+                console.error("Помилка декодування:", e);
+                return null;
+            }
+        }
+
+        // Витягуємо зашифрований JSON з посилання (URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        const b64Data = urlParams.get('b64');
+
+        const questsEl = document.getElementById('quests');
+        const loreEl = document.getElementById('lore');
+
+        if (b64Data) {
+            const jsonString = b64DecodeUnicode(b64Data);
+            if (jsonString) {
+                try {
+                    const data = JSON.parse(jsonString);
+                    
+                    // Виводимо Квести
+                    if (data.quests_active && data.quests_active.trim() !== "") {
+                        questsEl.innerHTML = data.quests_active;
+                    } else {
+                        questsEl.innerHTML = '<span class="empty-state">Немає активних завдань.</span>';
+                    }
+
+                    // Виводимо Довідник Світу
+                    if (data.world_knowledge && data.world_knowledge.trim() !== "") {
+                        loreEl.innerHTML = data.world_knowledge;
+                    } else {
+                        loreEl.innerHTML = '<span class="empty-state">Світ поки невідомий. Досліджуйте!</span>';
+                    }
+
+                } catch (e) {
+                    questsEl.innerHTML = "❌ Помилка читання сувою.";
+                    loreEl.innerHTML = "❌ Помилка читання сувою.";
+                    console.error("JSON Parse Error:", e);
+                }
+            } else {
+                questsEl.innerHTML = "❌ Дані пошкоджено.";
+                loreEl.innerHTML = "❌ Дані пошкоджено.";
+            }
+        } else {
+            questsEl.innerHTML = "❌ Дані не знайдено в URL.";
+            loreEl.innerHTML = "❌ Дані не знайдено в URL.";
+        }
+    </script>
+</body>
+</html>
