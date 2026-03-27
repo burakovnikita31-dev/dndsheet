@@ -159,154 +159,36 @@
 </head>
 <body>
     <div class="sheet">
-        <h1 id="name">Завантаження...</h1>
+        <h1 id="name"><span id="lbl-loading">Завантаження...</span></h1>
         
         <div class="meta-header">
-            📅 <span id="date">Завантаження дати...</span> | 👤 Вік: <span id="age">-</span>
+            📅 <span id="date">...</span> | <span id="lbl-age">👤 Вік:</span> <span id="age">-</span>
         </div>
 
         <div class="level-header">
-            <span>Рівень: <span id="level">-</span> | XP: <span id="xp">-</span></span>
+            <span><span id="lbl-level">Рівень:</span> <span id="level">-</span> | XP: <span id="xp">-</span></span>
             <span id="inspiration" class="inspiration-badge">🌟 Натхнення: 0</span>
         </div>
         
         <div class="grid">
-            <div class="info-row"><b>Раса:</b> <span id="race">-</span></div>
-            <div class="info-row"><b>Клас:</b> <span id="class">-</span></div>
-            <div class="info-row"><b>ХП:</b> <span id="hp">-</span></div>
-            <div class="info-row"><b>AC:</b> <span id="ac">-</span></div>
-            <div class="info-row" style="grid-column: span 2;"><b>Золото:</b> <span id="gold">-</span></div>
+            <div class="info-row"><b id="lbl-race">Раса:</b> <span id="race">-</span></div>
+            <div class="info-row"><b id="lbl-class">Клас:</b> <span id="class">-</span></div>
+            <div class="info-row"><b id="lbl-hp">ХП:</b> <span id="hp">-</span></div>
+            <div class="info-row"><b id="lbl-ac">AC:</b> <span id="ac">-</span></div>
+            <div class="info-row" style="grid-column: span 2;"><b id="lbl-gold">Золото:</b> <span id="gold">-</span></div>
             
             <div id="location-box" class="map-active" style="display: none;">
-                🗺️ <b>GPS Навігація (Мапа активна):</b><br>
+                <span id="lbl-map">🗺️ <b>GPS Навігація (Мапа активна):</b></span><br>
                 <span id="location-text" style="font-weight: normal;">-</span>
             </div>
             
             <div class="status-row">
-                <b>Стан:</b> <span id="status">Завантаження...</span>
+                <b id="lbl-status">Стан:</b> <span id="status">...</span>
             </div>
 
             <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513;">
-                <b>Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
+                <b id="lbl-deathsaves">Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
             </div>
         </div>
         
-        <div class="section-title">Характеристики</div>
-        <div class="grid" id="stats-grid"></div>
-
-        <div class="section-title">Бекграунд та Характер</div>
-        <div class="text-block background-block" id="background">-</div>
-
-        <div class="section-title">Дії та Атаки</div>
-        <div class="text-block actions-block" id="actions">-</div>
-
-        <div id="magic-section" style="display: none;">
-            <div class="section-title">Магія</div>
-            <div id="spell-slots" class="spell-slots"></div>
-            <div class="text-block magic-bg" id="spells"></div>
-        </div>
-
-        <div class="section-title">Екіпірування</div>
-        <div class="text-block" id="equipped">-</div>
-
-        <div class="section-title">Інвентар</div>
-        <div class="text-block" id="inventory">-</div>
-
-        <div class="section-title">Навички та Риси</div>
-        <div class="text-block" id="skills">-</div>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); 
-
-        const params = new URLSearchParams(window.location.search);
-        const b64Param = params.get("b64");
-
-        try {
-            if (b64Param) {
-                // Декодування Base64 для Telegram
-                const decodedStr = decodeURIComponent(escape(atob(b64Param)));
-                const data = JSON.parse(decodedStr);
-                
-                // Відображення Дати та Віку (Алгоритм 8 та 13)
-                document.getElementById('date').innerText = data.date || "Дата невідома";
-                document.getElementById('age').innerText = data.age || "-";
-                
-                // Заповнення основних полів
-                document.getElementById('name').innerText = data.name || "Герой";
-                document.getElementById('level').innerText = data.level || "1";
-                document.getElementById('xp').innerText = data.xp || "0";
-                document.getElementById('race').innerText = data.race || "-";
-                document.getElementById('class').innerText = data.class || "-";
-                document.getElementById('hp').innerText = data.hp || "-";
-                document.getElementById('ac').innerText = data.ac || "-";
-                document.getElementById('gold').innerText = data.gold || "0";
-                document.getElementById('death-saves').innerText = data.death_saves || "-";
-
-                // Оновлення Статусу (Авто-їжа/Виснаження)
-                document.getElementById('status').innerText = data.status || "Нормальний";
-
-                // ЛОГІКА ТУМАНУ ВІЙНИ: Відображаємо локацію, ТІЛЬКИ якщо є карта
-                const invText = (data.inventory || "").toLowerCase();
-                const eqpText = (data.equipped || "").toLowerCase();
-                if ((invText.includes("карт") || invText.includes("мап") || eqpText.includes("карт") || eqpText.includes("мап")) && data.gm_tracker) {
-                    document.getElementById('location-box').style.display = 'block';
-                    document.getElementById('location-text').innerText = data.gm_tracker;
-                }
-
-                // Логіка Натхнення (Алгоритм 17)
-                const insp = document.getElementById('inspiration');
-                if (String(data.inspiration) === "1") {
-                    insp.innerText = "🌟 Натхнення: 1";
-                    insp.className = "inspiration-badge active";
-                } else {
-                    insp.innerText = "🌟 Натхнення: 0";
-                    insp.className = "inspiration-badge";
-                }
-
-                // Текстові блоки (Алгоритм 13)
-                document.getElementById('background').innerText = data.background || "-";
-                document.getElementById('actions').innerText = data.actions || "-";
-                document.getElementById('equipped').innerText = data.equipped || "-";
-                document.getElementById('inventory').innerText = data.inventory || "-";
-                document.getElementById('skills').innerText = data.skills || "-";
-
-                // Генерація Характеристик
-                const statsGrid = document.getElementById('stats-grid');
-                statsGrid.innerHTML = '';
-                if (data.stats) {
-                    Object.entries(data.stats).forEach(([key, val]) => {
-                        statsGrid.innerHTML += `
-                            <div class="stat-box">
-                                <div class="stat-value">${val}</div>
-                                <div class="label">${key}</div>
-                            </div>`;
-                    });
-                }
-
-                // Логіка Магії (Алгоритм 14)
-                const magicSec = document.getElementById('magic-section');
-                const slots = document.getElementById('spell-slots');
-                const spells = document.getElementById('spells');
-                
-                if (data.spells && data.spells !== "Немає магії" && data.spells !== "-") {
-                    magicSec.style.display = 'block';
-                    spells.innerText = data.spells;
-                    if (data.spell_slots && data.spell_slots !== "-") {
-                        slots.innerText = "Комірки: " + data.spell_slots;
-                        slots.style.display = 'block';
-                    } else {
-                        slots.style.display = 'none';
-                    }
-                } else {
-                    magicSec.style.display = 'none';
-                }
-            }
-        } catch (e) {
-            document.getElementById('name').innerText = "Помилка даних";
-            console.error(e);
-        }
-    </script>
-</body>
-</html>
+        <div class="section-title
