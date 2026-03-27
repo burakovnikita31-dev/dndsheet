@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Журнал Квестів та Літопис</title>
+    <title>Quest Journal</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -50,7 +50,7 @@
         }
         .content {
             font-size: 15px;
-            white-space: pre-wrap; /* Зберігає перенесення рядків від ШІ */
+            white-space: pre-wrap;
             color: #cccccc;
         }
         .empty-state {
@@ -64,39 +64,82 @@
 </head>
 <body>
 
-    <h1>📜 Журнал Героя</h1>
+    <h1 id="main-title">📜 Журнал Героя</h1>
 
     <div class="section">
-        <h2>🎯 Активні Завдання</h2>
-        <div id="quests" class="content">Завантаження магічних рун...</div>
+        <h2 id="quests-title">🎯 Активні Завдання</h2>
+        <div id="quests" class="content">...</div>
     </div>
 
     <div class="section">
-        <h2>🌍 Світовий Довідник</h2>
-        <div id="lore" class="content">Розшифровка літописів...</div>
+        <h2 id="lore-title">🌍 Світовий Довідник</h2>
+        <div id="lore" class="content">...</div>
     </div>
 
     <script>
-        // Ініціалізуємо додаток Telegram (щоб він гарно виглядав на телефоні)
+        // Ініціалізуємо Telegram WebApp
         window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand(); // Розгортаємо на всю висоту екрану
+        window.Telegram.WebApp.expand(); 
 
-        // Функція для безпечного декодування Base64 з підтримкою кирилиці
+        // СЛОВНИК ЛОКАЛІЗАЦІЇ ІНТЕРФЕЙСУ
+        const uiDict = {
+            'uk': {
+                title: "📜 Журнал Героя",
+                quests: "🎯 Активні Завдання",
+                lore: "🌍 Світовий Довідник",
+                emptyQ: '<span class="empty-state">Немає активних завдань.</span>',
+                emptyL: '<span class="empty-state">Світ поки невідомий. Досліджуйте!</span>',
+                errRead: "❌ Помилка читання сувою.",
+                errData: "❌ Дані пошкоджено або не знайдено."
+            },
+            'en': {
+                title: "📜 Hero's Journal",
+                quests: "🎯 Active Quests",
+                lore: "🌍 World Compendium",
+                emptyQ: '<span class="empty-state">No active quests.</span>',
+                emptyL: '<span class="empty-state">The world is unknown. Explore!</span>',
+                errRead: "❌ Error reading the scroll.",
+                errData: "❌ Data corrupted or missing."
+            },
+            'ru': {
+                title: "📜 Журнал Героя",
+                quests: "🎯 Активные Задания",
+                lore: "🌍 Мировой Справочник",
+                emptyQ: '<span class="empty-state">Нет активных заданий.</span>',
+                emptyL: '<span class="empty-state">Мир пока неизвестен. Исследуйте!</span>',
+                errRead: "❌ Ошибка чтения свитка.",
+                errData: "❌ Данные повреждены или не найдены."
+            }
+        };
+
+        // Визначаємо мову Telegram клієнта (за замовчуванням 'uk')
+        const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+        let lang = 'uk';
+        if (tgUser && tgUser.language_code) {
+            if (tgUser.language_code.startsWith('ru')) lang = 'ru';
+            else if (tgUser.language_code.startsWith('en')) lang = 'en';
+        }
+
+        // Перекладаємо статичні заголовки
+        document.getElementById('main-title').innerHTML = uiDict[lang].title;
+        document.getElementById('quests-title').innerHTML = uiDict[lang].quests;
+        document.getElementById('lore-title').innerHTML = uiDict[lang].lore;
+
+        // Декодування Base64
         function b64DecodeUnicode(str) {
             try {
                 return decodeURIComponent(atob(str).split('').map(function(c) {
                     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                 }).join(''));
             } catch (e) {
-                console.error("Помилка декодування:", e);
+                console.error("Decode Error:", e);
                 return null;
             }
         }
 
-        // Витягуємо зашифрований JSON з посилання (URL)
+        // Парсинг даних
         const urlParams = new URLSearchParams(window.location.search);
         const b64Data = urlParams.get('b64');
-
         const questsEl = document.getElementById('quests');
         const loreEl = document.getElementById('lore');
 
@@ -106,32 +149,31 @@
                 try {
                     const data = JSON.parse(jsonString);
                     
-                    // Виводимо Квести
-                    if (data.quests_active && data.quests_active.trim() !== "") {
+                    // Динамічний вивід квестів
+                    if (data.quests_active && data.quests_active.trim() !== "" && data.quests_active !== "Немає активних завдань.") {
                         questsEl.innerHTML = data.quests_active;
                     } else {
-                        questsEl.innerHTML = '<span class="empty-state">Немає активних завдань.</span>';
+                        questsEl.innerHTML = uiDict[lang].emptyQ;
                     }
 
-                    // Виводимо Довідник Світу
-                    if (data.world_knowledge && data.world_knowledge.trim() !== "") {
+                    // Динамічний вивід знань про світ
+                    if (data.world_knowledge && data.world_knowledge.trim() !== "" && data.world_knowledge !== "Світ поки невідомий.") {
                         loreEl.innerHTML = data.world_knowledge;
                     } else {
-                        loreEl.innerHTML = '<span class="empty-state">Світ поки невідомий. Досліджуйте!</span>';
+                        loreEl.innerHTML = uiDict[lang].emptyL;
                     }
 
                 } catch (e) {
-                    questsEl.innerHTML = "❌ Помилка читання сувою.";
-                    loreEl.innerHTML = "❌ Помилка читання сувою.";
-                    console.error("JSON Parse Error:", e);
+                    questsEl.innerHTML = uiDict[lang].errRead;
+                    loreEl.innerHTML = uiDict[lang].errRead;
                 }
             } else {
-                questsEl.innerHTML = "❌ Дані пошкоджено.";
-                loreEl.innerHTML = "❌ Дані пошкоджено.";
+                questsEl.innerHTML = uiDict[lang].errData;
+                loreEl.innerHTML = uiDict[lang].errData;
             }
         } else {
-            questsEl.innerHTML = "❌ Дані не знайдено в URL.";
-            loreEl.innerHTML = "❌ Дані не знайдено в URL.";
+            questsEl.innerHTML = uiDict[lang].errData;
+            loreEl.innerHTML = uiDict[lang].errData;
         }
     </script>
 </body>
