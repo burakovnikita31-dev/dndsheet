@@ -187,8 +187,21 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // 1. Словник для мультимовності
-        const userLang = tg.initDataUnsafe?.user?.language_code || 'uk';
+        // 1. Спочатку розпаковуємо дані з Base64, щоб дістати мову (data.lang)
+        const params = new URLSearchParams(window.location.search);
+        const b64Param = params.get("b64");
+        let data = {};
+
+        if (b64Param) {
+            try {
+                const decodedStr = decodeURIComponent(escape(window.atob(b64Param)));
+                data = JSON.parse(decodedStr);
+            } catch (e) {
+                console.error("Помилка парсингу:", e);
+            }
+        }
+
+        // 2. Словник для мультимовності
         const dict = {
             en: { 
                 loading: "Loading...", age: "👤 Age:", level: "Level:", insp: "Inspiration:", 
@@ -212,9 +225,13 @@
                 skillsTitle: "Навички та Дії"
             }
         };
-        const t = dict[userLang] || dict['uk'];
 
-        // 2. Переклад інтерфейсу
+        // 3. ВИЗНАЧЕННЯ МОВИ: Пріоритет - налаштування бота (data.lang), потім Telegram
+        let userLang = data.lang || tg.initDataUnsafe?.user?.language_code || 'uk';
+        if (!dict[userLang]) userLang = 'uk'; // Fallback
+        const t = dict[userLang];
+
+        // 4. Переклад інтерфейсу
         document.getElementById('lbl-loading').innerText = t.loading;
         document.getElementById('lbl-age').innerText = t.age;
         document.getElementById('lbl-level').innerText = t.level;
@@ -231,70 +248,61 @@
         document.getElementById('lbl-inv-title').innerText = t.invTitle;
         document.getElementById('lbl-skills-title').innerText = t.skillsTitle;
 
-        // 3. Розшифровка та виведення даних
-        const params = new URLSearchParams(window.location.search);
-        const b64Param = params.get("b64");
-
-        if (b64Param) {
-            try {
-                const decodedStr = decodeURIComponent(escape(window.atob(b64Param)));
-                const data = JSON.parse(decodedStr);
-                
-                document.getElementById('name').innerText = data.name || "Hero";
-                document.getElementById('date').innerText = data.date || "-";
-                document.getElementById('age').innerText = data.age || "-";
-                document.getElementById('level').innerText = data.level || "1";
-                document.getElementById('xp').innerText = data.xp || "0/300";
-                
-                // Натхнення (підсвічуємо, якщо є)
-                const inspVal = data.inspiration || "0";
-                document.getElementById('insp-val').innerText = inspVal;
-                if(inspVal !== "0" && inspVal.toLowerCase() !== "false") {
-                    document.getElementById('inspiration').classList.add("active");
-                }
-
-                document.getElementById('race').innerText = data.race || "-";
-                document.getElementById('class').innerText = data.class || "-";
-                document.getElementById('hp').innerText = data.hp || "-";
-                document.getElementById('ac').innerText = data.ac || "-";
-                document.getElementById('gold').innerText = data.gold || "-";
-                document.getElementById('status').innerText = data.status || "-";
-                document.getElementById('death-saves').innerText = data.death_saves || "-";
-                
-                // Інвентар
-                let invText = "";
-                if(data.equipped) invText += "⚔️ " + data.equipped + "\n";
-                if(data.inventory) invText += "\n🎒 " + data.inventory;
-                document.getElementById('inventory').innerText = invText || "-";
-
-                // Навички та Дії
-                let skillsText = "";
-                if(data.skills) skillsText += "🎯 " + data.skills + "\n";
-                if(data.actions) skillsText += "\n⚡ " + data.actions;
-                if(data.spells && data.spells !== "-") skillsText += "\n\n✨ Магія: " + data.spells + " (Комірки: " + data.spell_slots + ")";
-                document.getElementById('skills').innerText = skillsText || "-";
-
-                // Секретна мапа (ГМ-трекер)
-                if (data.gm_tracker) {
-                    document.getElementById('location-box').style.display = "block";
-                    document.getElementById('location-text').innerText = data.gm_tracker;
-                }
-
-                // Характеристики
-                const statsGrid = document.getElementById('stats-grid');
-                if (data.stats) {
-                    for (const [key, value] of Object.entries(data.stats)) {
-                        statsGrid.innerHTML += `
-                            <div class="stat-box">
-                                <div class="stat-value">${value}</div>
-                                <div class="label">${key}</div>
-                            </div>`;
-                    }
-                }
-            } catch (e) {
-                console.error("Помилка парсингу:", e);
-                document.getElementById('name').innerText = "Помилка завантаження";
+        // 5. Заповнення даними
+        if (data.name) {
+            document.getElementById('name').innerText = data.name;
+            document.getElementById('date').innerText = data.date || "-";
+            document.getElementById('age').innerText = data.age || "-";
+            document.getElementById('level').innerText = data.level || "1";
+            document.getElementById('xp').innerText = data.xp || "0/300";
+            
+            // Натхнення (підсвічуємо, якщо є)
+            const inspVal = data.inspiration || "0";
+            document.getElementById('insp-val').innerText = inspVal;
+            if(inspVal !== "0" && inspVal.toLowerCase() !== "false") {
+                document.getElementById('inspiration').classList.add("active");
             }
+
+            document.getElementById('race').innerText = data.race || "-";
+            document.getElementById('class').innerText = data.class || "-";
+            document.getElementById('hp').innerText = data.hp || "-";
+            document.getElementById('ac').innerText = data.ac || "-";
+            document.getElementById('gold').innerText = data.gold || "-";
+            document.getElementById('status').innerText = data.status || "-";
+            document.getElementById('death-saves').innerText = data.death_saves || "-";
+            
+            // Інвентар
+            let invText = "";
+            if(data.equipped) invText += "⚔️ " + data.equipped + "\n";
+            if(data.inventory) invText += "\n🎒 " + data.inventory;
+            document.getElementById('inventory').innerText = invText || "-";
+
+            // Навички та Дії
+            let skillsText = "";
+            if(data.skills) skillsText += "🎯 " + data.skills + "\n";
+            if(data.actions) skillsText += "\n⚡ " + data.actions;
+            if(data.spells && data.spells !== "-") skillsText += "\n\n✨ Магія: " + data.spells + " (Комірки: " + data.spell_slots + ")";
+            document.getElementById('skills').innerText = skillsText || "-";
+
+            // Секретна мапа (ГМ-трекер)
+            if (data.gm_tracker) {
+                document.getElementById('location-box').style.display = "block";
+                document.getElementById('location-text').innerText = data.gm_tracker;
+            }
+
+            // Характеристики
+            const statsGrid = document.getElementById('stats-grid');
+            if (data.stats) {
+                for (const [key, value] of Object.entries(data.stats)) {
+                    statsGrid.innerHTML += `
+                        <div class="stat-box">
+                            <div class="stat-value">${value}</div>
+                            <div class="label">${key}</div>
+                        </div>`;
+                }
+            }
+        } else {
+            document.getElementById('name').innerText = "Помилка завантаження";
         }
     </script>
 </body>
