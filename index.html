@@ -110,4 +110,192 @@
             background: rgba(139, 69, 19, 0.05);
             padding: 8px;
             border-radius: 5px;
-            border: 1px
+            border: 1px solid rgba(139, 69, 19, 0.2);
+            margin-bottom: 10px;
+        }
+        .status-row {
+            grid-column: span 2; 
+            border-top: 2px solid #8b4513; 
+            margin-top: 5px; 
+            padding-top: 8px;
+            color: #d35400; 
+            font-weight: bold;
+            text-align: center;
+            font-size: 15px;
+        }
+        .danger-text { color: #8b0000; }
+        .map-active {
+            grid-column: span 2;
+            background: #e8d0a9;
+            border: 2px dashed #8b4513;
+            color: #4a5c44;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="sheet">
+        <h1 id="name"><span id="lbl-loading">Завантаження...</span></h1>
+        
+        <div class="meta-header">
+            📅 <span id="date">...</span> | <span id="lbl-age">👤 Вік:</span> <span id="age">-</span>
+        </div>
+
+        <div class="level-header">
+            <span><span id="lbl-level">Рівень:</span> <span id="level">-</span> | XP: <span id="xp">-</span></span>
+            <span id="inspiration" class="inspiration-badge">🌟 <span id="lbl-insp">Натхнення:</span> <span id="insp-val">0</span></span>
+        </div>
+        
+        <div class="grid">
+            <div class="info-row"><b id="lbl-race">Раса:</b> <span id="race">-</span></div>
+            <div class="info-row"><b id="lbl-class">Клас:</b> <span id="class">-</span></div>
+            <div class="info-row"><b id="lbl-hp">ХП:</b> <span id="hp">-</span></div>
+            <div class="info-row"><b id="lbl-ac">AC:</b> <span id="ac">-</span></div>
+            <div class="info-row" style="grid-column: span 2;"><b id="lbl-gold">Золото:</b> <span id="gold">-</span></div>
+            
+            <div id="location-box" class="map-active" style="display: none;">
+                <span id="lbl-map">🗺️ <b>GPS Навігація (Мапа активна):</b></span><br>
+                <span id="location-text" style="font-weight: normal;">-</span>
+            </div>
+            
+            <div class="status-row">
+                <b id="lbl-status">Стан:</b> <span id="status">...</span>
+            </div>
+
+            <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513;">
+                <b id="lbl-deathsaves">Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
+            </div>
+        </div>
+        
+        <div class="section-title" id="lbl-stats-title">Характеристики</div>
+        <div class="grid" id="stats-grid"></div>
+
+        <div class="section-title" id="lbl-inv-title">Інвентар та Екіпірування</div>
+        <div id="inventory" class="text-block">-</div>
+
+        <div class="section-title" id="lbl-skills-title">Навички та Дії</div>
+        <div id="skills" class="text-block">-</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // 1. Словник для мультимовності
+        const userLang = tg.initDataUnsafe?.user?.language_code || 'uk';
+        const dict = {
+            en: { 
+                loading: "Loading...", age: "👤 Age:", level: "Level:", insp: "Inspiration:", 
+                race: "Race:", cls: "Class:", hp: "HP:", ac: "AC:", gold: "Gold:", 
+                map: "🗺️ <b>GPS Navigation (Map active):</b>", status: "Status:", 
+                deathsaves: "Death Saves:", statsTitle: "Attributes", invTitle: "Inventory & Equipment", 
+                skillsTitle: "Skills & Actions"
+            },
+            ru: { 
+                loading: "Загрузка...", age: "👤 Возраст:", level: "Уровень:", insp: "Вдохновение:", 
+                race: "Раса:", cls: "Класс:", hp: "ХП:", ac: "КД:", gold: "Золото:", 
+                map: "🗺️ <b>GPS Навигация (Карта активна):</b>", status: "Состояние:", 
+                deathsaves: "Спасброски от смерти:", statsTitle: "Характеристики", invTitle: "Инвентарь и Экипировка", 
+                skillsTitle: "Навыки и Действия"
+            },
+            uk: { 
+                loading: "Завантаження...", age: "👤 Вік:", level: "Рівень:", insp: "Натхнення:", 
+                race: "Раса:", cls: "Клас:", hp: "ХП:", ac: "AC:", gold: "Золото:", 
+                map: "🗺️ <b>GPS Навігація (Мапа активна):</b>", status: "Стан:", 
+                deathsaves: "Рятівні кидки від смерті:", statsTitle: "Характеристики", invTitle: "Інвентар та Екіпірування", 
+                skillsTitle: "Навички та Дії"
+            }
+        };
+        const t = dict[userLang] || dict['uk'];
+
+        // 2. Переклад інтерфейсу
+        document.getElementById('lbl-loading').innerText = t.loading;
+        document.getElementById('lbl-age').innerText = t.age;
+        document.getElementById('lbl-level').innerText = t.level;
+        document.getElementById('lbl-insp').innerText = t.insp;
+        document.getElementById('lbl-race').innerText = t.race;
+        document.getElementById('lbl-class').innerText = t.cls;
+        document.getElementById('lbl-hp').innerText = t.hp;
+        document.getElementById('lbl-ac').innerText = t.ac;
+        document.getElementById('lbl-gold').innerText = t.gold;
+        document.getElementById('lbl-map').innerHTML = t.map;
+        document.getElementById('lbl-status').innerText = t.status;
+        document.getElementById('lbl-deathsaves').innerText = t.deathsaves;
+        document.getElementById('lbl-stats-title').innerText = t.statsTitle;
+        document.getElementById('lbl-inv-title').innerText = t.invTitle;
+        document.getElementById('lbl-skills-title').innerText = t.skillsTitle;
+
+        // 3. Розшифровка та виведення даних
+        const params = new URLSearchParams(window.location.search);
+        const b64Param = params.get("b64");
+
+        if (b64Param) {
+            try {
+                const decodedStr = decodeURIComponent(escape(window.atob(b64Param)));
+                const data = JSON.parse(decodedStr);
+                
+                document.getElementById('name').innerText = data.name || "Hero";
+                document.getElementById('date').innerText = data.date || "-";
+                document.getElementById('age').innerText = data.age || "-";
+                document.getElementById('level').innerText = data.level || "1";
+                document.getElementById('xp').innerText = data.xp || "0/300";
+                
+                // Натхнення (підсвічуємо, якщо є)
+                const inspVal = data.inspiration || "0";
+                document.getElementById('insp-val').innerText = inspVal;
+                if(inspVal !== "0" && inspVal.toLowerCase() !== "false") {
+                    document.getElementById('inspiration').classList.add("active");
+                }
+
+                document.getElementById('race').innerText = data.race || "-";
+                document.getElementById('class').innerText = data.class || "-";
+                document.getElementById('hp').innerText = data.hp || "-";
+                document.getElementById('ac').innerText = data.ac || "-";
+                document.getElementById('gold').innerText = data.gold || "-";
+                document.getElementById('status').innerText = data.status || "-";
+                document.getElementById('death-saves').innerText = data.death_saves || "-";
+                
+                // Інвентар
+                let invText = "";
+                if(data.equipped) invText += "⚔️ " + data.equipped + "\n";
+                if(data.inventory) invText += "\n🎒 " + data.inventory;
+                document.getElementById('inventory').innerText = invText || "-";
+
+                // Навички та Дії
+                let skillsText = "";
+                if(data.skills) skillsText += "🎯 " + data.skills + "\n";
+                if(data.actions) skillsText += "\n⚡ " + data.actions;
+                if(data.spells && data.spells !== "-") skillsText += "\n\n✨ Магія: " + data.spells + " (Комірки: " + data.spell_slots + ")";
+                document.getElementById('skills').innerText = skillsText || "-";
+
+                // Секретна мапа (ГМ-трекер)
+                if (data.gm_tracker) {
+                    document.getElementById('location-box').style.display = "block";
+                    document.getElementById('location-text').innerText = data.gm_tracker;
+                }
+
+                // Характеристики
+                const statsGrid = document.getElementById('stats-grid');
+                if (data.stats) {
+                    for (const [key, value] of Object.entries(data.stats)) {
+                        statsGrid.innerHTML += `
+                            <div class="stat-box">
+                                <div class="stat-value">${value}</div>
+                                <div class="label">${key}</div>
+                            </div>`;
+                    }
+                }
+            } catch (e) {
+                console.error("Помилка парсингу:", e);
+                document.getElementById('name').innerText = "Помилка завантаження";
+            }
+        }
+    </script>
+</body>
+</html>
