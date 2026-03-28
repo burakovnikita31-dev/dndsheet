@@ -27,7 +27,6 @@
             margin-bottom: 5px; 
             font-size: 24px;
         }
-        /* Календар та Вік */
         .meta-header {
             text-align: center;
             font-size: 13px;
@@ -111,84 +110,4 @@
             background: rgba(139, 69, 19, 0.05);
             padding: 8px;
             border-radius: 5px;
-            border: 1px solid rgba(139, 69, 19, 0.2);
-        }
-        .actions-block { border-left: 4px solid #8b0000; }
-        .background-block { border-left: 4px solid #b8860b; background: rgba(184, 134, 11, 0.05); }
-        .danger-text { color: #8b0000; }
-        
-        /* Статус (Виснаження/Голод) */
-        .status-row {
-            grid-column: span 2; 
-            border-top: 2px solid #8b4513; 
-            margin-top: 5px; 
-            padding-top: 8px;
-            color: #d35400; 
-            font-weight: bold;
-            text-align: center;
-            font-size: 15px;
-        }
-
-        .spell-slots {
-            background: #e6f2ff;
-            border: 1px solid #b3d9ff;
-            padding: 6px;
-            border-radius: 5px;
-            color: #005580;
-            font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .magic-bg { border-left: 4px solid #4b0082; background: rgba(75, 0, 130, 0.05); }
-
-        /* Стиль для секретної Карти */
-        .map-active {
-            grid-column: span 2;
-            background: #e8d0a9;
-            border: 2px dashed #8b4513;
-            color: #4a5c44;
-            padding: 8px;
-            border-radius: 5px;
-            font-size: 13px;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 5px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-<body>
-    <div class="sheet">
-        <h1 id="name"><span id="lbl-loading">Завантаження...</span></h1>
-        
-        <div class="meta-header">
-            📅 <span id="date">...</span> | <span id="lbl-age">👤 Вік:</span> <span id="age">-</span>
-        </div>
-
-        <div class="level-header">
-            <span><span id="lbl-level">Рівень:</span> <span id="level">-</span> | XP: <span id="xp">-</span></span>
-            <span id="inspiration" class="inspiration-badge">🌟 Натхнення: 0</span>
-        </div>
-        
-        <div class="grid">
-            <div class="info-row"><b id="lbl-race">Раса:</b> <span id="race">-</span></div>
-            <div class="info-row"><b id="lbl-class">Клас:</b> <span id="class">-</span></div>
-            <div class="info-row"><b id="lbl-hp">ХП:</b> <span id="hp">-</span></div>
-            <div class="info-row"><b id="lbl-ac">AC:</b> <span id="ac">-</span></div>
-            <div class="info-row" style="grid-column: span 2;"><b id="lbl-gold">Золото:</b> <span id="gold">-</span></div>
-            
-            <div id="location-box" class="map-active" style="display: none;">
-                <span id="lbl-map">🗺️ <b>GPS Навігація (Мапа активна):</b></span><br>
-                <span id="location-text" style="font-weight: normal;">-</span>
-            </div>
-            
-            <div class="status-row">
-                <b id="lbl-status">Стан:</b> <span id="status">...</span>
-            </div>
-
-            <div class="info-row danger-text" style="grid-column: span 2; border-bottom: 2px solid #8b4513;">
-                <b id="lbl-deathsaves">Рятівні кидки від смерті:</b> <span id="death-saves">-</span>
-            </div>
-        </div>
-        
-        <div class="section-title
+            border: 1px
