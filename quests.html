@@ -60,6 +60,9 @@
             display: block;
             padding: 10px 0;
         }
+        .error-state {
+            color: #cc0000;
+        }
     </style>
 </head>
 <body>
@@ -68,112 +71,90 @@
 
     <div class="section">
         <h2 id="quests-title">🎯 Активні Завдання</h2>
-        <div id="quests" class="content">...</div>
+        <div id="quests" class="content">Завантаження...</div>
     </div>
 
     <div class="section">
         <h2 id="lore-title">🌍 Світовий Довідник</h2>
-        <div id="lore" class="content">...</div>
+        <div id="lore" class="content">Завантаження...</div>
     </div>
 
     <script>
-        // Ініціалізуємо Telegram WebApp
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand(); 
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.setHeaderColor('#121212');
+        tg.setBackgroundColor('#121212');
 
-        // СЛОВНИК ЛОКАЛІЗАЦІЇ ІНТЕРФЕЙСУ
-        const uiDict = {
-            'uk': {
-                title: "📜 Журнал Героя",
-                quests: "🎯 Активні Завдання",
-                lore: "🌍 Світовий Довідник",
-                emptyQ: '<span class="empty-state">Немає активних завдань.</span>',
-                emptyL: '<span class="empty-state">Світ поки невідомий. Досліджуйте!</span>',
-                errRead: "❌ Помилка читання сувою.",
-                errData: "❌ Дані пошкоджено або не знайдено."
+        // Словник локалізації UI
+        const userLang = tg.initDataUnsafe?.user?.language_code || 'uk';
+        const dict = {
+            en: { 
+                title: "📜 HERO'S JOURNAL", quests: "🎯 Active Quests", lore: "🌍 World Compendium", 
+                emptyQ: "No active quests.", emptyL: "The world is unknown. Explore!", 
+                loading: "Loading...", errData: "❌ Data corrupted or missing." 
             },
-            'en': {
-                title: "📜 Hero's Journal",
-                quests: "🎯 Active Quests",
-                lore: "🌍 World Compendium",
-                emptyQ: '<span class="empty-state">No active quests.</span>',
-                emptyL: '<span class="empty-state">The world is unknown. Explore!</span>',
-                errRead: "❌ Error reading the scroll.",
-                errData: "❌ Data corrupted or missing."
+            ru: { 
+                title: "📜 ЖУРНАЛ ГЕРОЯ", quests: "🎯 Активные Задания", lore: "🌍 Мировой Справочник", 
+                emptyQ: "Нет активных заданий.", emptyL: "Мир пока неизвестен. Исследуйте!", 
+                loading: "Загрузка...", errData: "❌ Данные повреждены или не найдены." 
             },
-            'ru': {
-                title: "📜 Журнал Героя",
-                quests: "🎯 Активные Задания",
-                lore: "🌍 Мировой Справочник",
-                emptyQ: '<span class="empty-state">Нет активных заданий.</span>',
-                emptyL: '<span class="empty-state">Мир пока неизвестен. Исследуйте!</span>',
-                errRead: "❌ Ошибка чтения свитка.",
-                errData: "❌ Данные повреждены или не найдены."
+            uk: { 
+                title: "📜 ЖУРНАЛ ГЕРОЯ", quests: "🎯 Активні Завдання", lore: "🌍 Світовий Довідник", 
+                emptyQ: "Немає активних завдань.", emptyL: "Світ поки невідомий. Досліджуйте!", 
+                loading: "Завантаження...", errData: "❌ Дані пошкоджено або не знайдено." 
             }
         };
-
-        // Визначаємо мову Telegram клієнта (за замовчуванням 'uk')
-        const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
-        let lang = 'uk';
-        if (tgUser && tgUser.language_code) {
-            if (tgUser.language_code.startsWith('ru')) lang = 'ru';
-            else if (tgUser.language_code.startsWith('en')) lang = 'en';
-        }
+        const t = dict[userLang] || dict['uk'];
 
         // Перекладаємо статичні заголовки
-        document.getElementById('main-title').innerHTML = uiDict[lang].title;
-        document.getElementById('quests-title').innerHTML = uiDict[lang].quests;
-        document.getElementById('lore-title').innerHTML = uiDict[lang].lore;
+        document.getElementById('main-title').innerText = t.title;
+        document.getElementById('quests-title').innerText = t.quests;
+        document.getElementById('quests').innerText = t.loading;
+        document.getElementById('lore').innerText = t.loading;
 
-        // Декодування Base64
-        function b64DecodeUnicode(str) {
+        const params = new URLSearchParams(window.location.search);
+        const b64Param = params.get("b64");
+
+        if (b64Param) {
             try {
-                return decodeURIComponent(atob(str).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+                // Безпечне декодування Base64 з підтримкою кирилиці
+                const decodedStr = decodeURIComponent(escape(window.atob(b64Param)));
+                const data = JSON.parse(decodedStr);
+
+                // Розумна перевірка на "порожнечу" (розуміє Укр, Англ і Рос заглушки)
+                const isDefault = (str) => {
+                    if (!str || str.trim() === "" || str === "-") return true;
+                    const lower = str.toLowerCase();
+                    return lower.includes("немає активних завдань") || 
+                           lower.includes("світ поки невідомий") || 
+                           lower.includes("no active quests") || 
+                           lower.includes("world is yet unknown") || 
+                           lower.includes("нет активных заданий") || 
+                           lower.includes("мир пока неизвестен");
+                };
+
+                // Вивід Квестів
+                if (!isDefault(data.quests_active)) {
+                    document.getElementById('quests').innerText = data.quests_active;
+                } else {
+                    document.getElementById('quests').innerHTML = `<span class="empty-state">${t.emptyQ}</span>`;
+                }
+
+                // Вивід Довідника
+                if (!isDefault(data.world_knowledge)) {
+                    document.getElementById('lore').innerText = data.world_knowledge;
+                } else {
+                    document.getElementById('lore').innerHTML = `<span class="empty-state">${t.emptyL}</span>`;
+                }
+
             } catch (e) {
                 console.error("Decode Error:", e);
-                return null;
-            }
-        }
-
-        // Парсинг даних
-        const urlParams = new URLSearchParams(window.location.search);
-        const b64Data = urlParams.get('b64');
-        const questsEl = document.getElementById('quests');
-        const loreEl = document.getElementById('lore');
-
-        if (b64Data) {
-            const jsonString = b64DecodeUnicode(b64Data);
-            if (jsonString) {
-                try {
-                    const data = JSON.parse(jsonString);
-                    
-                    // Динамічний вивід квестів
-                    if (data.quests_active && data.quests_active.trim() !== "" && data.quests_active !== "Немає активних завдань.") {
-                        questsEl.innerHTML = data.quests_active;
-                    } else {
-                        questsEl.innerHTML = uiDict[lang].emptyQ;
-                    }
-
-                    // Динамічний вивід знань про світ
-                    if (data.world_knowledge && data.world_knowledge.trim() !== "" && data.world_knowledge !== "Світ поки невідомий.") {
-                        loreEl.innerHTML = data.world_knowledge;
-                    } else {
-                        loreEl.innerHTML = uiDict[lang].emptyL;
-                    }
-
-                } catch (e) {
-                    questsEl.innerHTML = uiDict[lang].errRead;
-                    loreEl.innerHTML = uiDict[lang].errRead;
-                }
-            } else {
-                questsEl.innerHTML = uiDict[lang].errData;
-                loreEl.innerHTML = uiDict[lang].errData;
+                document.getElementById('quests').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
+                document.getElementById('lore').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
             }
         } else {
-            questsEl.innerHTML = uiDict[lang].errData;
-            loreEl.innerHTML = uiDict[lang].errData;
+            document.getElementById('quests').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
+            document.getElementById('lore').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
         }
     </script>
 </body>
