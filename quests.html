@@ -85,8 +85,22 @@
         tg.setHeaderColor('#121212');
         tg.setBackgroundColor('#121212');
 
-        // Словник локалізації UI
-        const userLang = tg.initDataUnsafe?.user?.language_code || 'uk';
+        // 1. Спочатку розпаковуємо дані з Base64, щоб дістати мову (data.lang)
+        const params = new URLSearchParams(window.location.search);
+        const b64Param = params.get("b64");
+        let data = {};
+
+        if (b64Param) {
+            try {
+                // Безпечне декодування Base64 з підтримкою кирилиці
+                const decodedStr = decodeURIComponent(escape(window.atob(b64Param)));
+                data = JSON.parse(decodedStr);
+            } catch (e) {
+                console.error("Decode Error:", e);
+            }
+        }
+
+        // 2. Словник локалізації UI
         const dict = {
             en: { 
                 title: "📜 HERO'S JOURNAL", quests: "🎯 Active Quests", lore: "🌍 World Compendium", 
@@ -104,54 +118,45 @@
                 loading: "Завантаження...", errData: "❌ Дані пошкоджено або не знайдено." 
             }
         };
-        const t = dict[userLang] || dict['uk'];
 
-        // Перекладаємо статичні заголовки
+        // 3. ВИЗНАЧЕННЯ МОВИ: Пріоритет - налаштування бота (data.lang), потім Telegram
+        let userLang = data.lang || tg.initDataUnsafe?.user?.language_code || 'uk';
+        if (!dict[userLang]) userLang = 'uk'; // Fallback
+        const t = dict[userLang];
+
+        // 4. Перекладаємо статичні заголовки
         document.getElementById('main-title').innerText = t.title;
         document.getElementById('quests-title').innerText = t.quests;
-        document.getElementById('quests').innerText = t.loading;
-        document.getElementById('lore').innerText = t.loading;
+        document.getElementById('lore-title').innerText = t.lore;
 
-        const params = new URLSearchParams(window.location.search);
-        const b64Param = params.get("b64");
+        // 5. Вивід контенту
+        if (b64Param && Object.keys(data).length > 0) {
+            // Розумна перевірка на "порожнечу" (розуміє Укр, Англ і Рос заглушки)
+            const isDefault = (str) => {
+                if (!str || str.trim() === "" || str === "-") return true;
+                const lower = str.toLowerCase();
+                return lower.includes("немає активних завдань") || 
+                       lower.includes("світ поки невідомий") || 
+                       lower.includes("no active quests") || 
+                       lower.includes("world is yet unknown") || 
+                       lower.includes("нет активных заданий") || 
+                       lower.includes("мир пока неизвестен");
+            };
 
-        if (b64Param) {
-            try {
-                // Безпечне декодування Base64 з підтримкою кирилиці
-                const decodedStr = decodeURIComponent(escape(window.atob(b64Param)));
-                const data = JSON.parse(decodedStr);
-
-                // Розумна перевірка на "порожнечу" (розуміє Укр, Англ і Рос заглушки)
-                const isDefault = (str) => {
-                    if (!str || str.trim() === "" || str === "-") return true;
-                    const lower = str.toLowerCase();
-                    return lower.includes("немає активних завдань") || 
-                           lower.includes("світ поки невідомий") || 
-                           lower.includes("no active quests") || 
-                           lower.includes("world is yet unknown") || 
-                           lower.includes("нет активных заданий") || 
-                           lower.includes("мир пока неизвестен");
-                };
-
-                // Вивід Квестів
-                if (!isDefault(data.quests_active)) {
-                    document.getElementById('quests').innerText = data.quests_active;
-                } else {
-                    document.getElementById('quests').innerHTML = `<span class="empty-state">${t.emptyQ}</span>`;
-                }
-
-                // Вивід Довідника
-                if (!isDefault(data.world_knowledge)) {
-                    document.getElementById('lore').innerText = data.world_knowledge;
-                } else {
-                    document.getElementById('lore').innerHTML = `<span class="empty-state">${t.emptyL}</span>`;
-                }
-
-            } catch (e) {
-                console.error("Decode Error:", e);
-                document.getElementById('quests').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
-                document.getElementById('lore').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
+            // Вивід Квестів
+            if (!isDefault(data.quests_active)) {
+                document.getElementById('quests').innerText = data.quests_active;
+            } else {
+                document.getElementById('quests').innerHTML = `<span class="empty-state">${t.emptyQ}</span>`;
             }
+
+            // Вивід Довідника
+            if (!isDefault(data.world_knowledge)) {
+                document.getElementById('lore').innerText = data.world_knowledge;
+            } else {
+                document.getElementById('lore').innerHTML = `<span class="empty-state">${t.emptyL}</span>`;
+            }
+
         } else {
             document.getElementById('quests').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
             document.getElementById('lore').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
