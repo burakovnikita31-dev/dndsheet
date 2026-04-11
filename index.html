@@ -201,28 +201,28 @@
             }
         }
 
-        // 2. Словник для мультимовності
+        // 2. Словник для мультимовності (додано magic та slots)
         const dict = {
             en: { 
                 loading: "Loading...", age: "👤 Age:", level: "Level:", insp: "Inspiration:", 
                 race: "Race:", cls: "Class:", hp: "HP:", ac: "AC:", gold: "Gold:", 
                 map: "🗺️ <b>GPS Navigation (Map active):</b>", status: "Status:", 
                 deathsaves: "Death Saves:", statsTitle: "Attributes", invTitle: "Inventory & Equipment", 
-                skillsTitle: "Skills & Actions"
+                skillsTitle: "Skills & Actions", magic: "✨ Magic:", slots: "Slots:"
             },
             ru: { 
                 loading: "Загрузка...", age: "👤 Возраст:", level: "Уровень:", insp: "Вдохновение:", 
                 race: "Раса:", cls: "Класс:", hp: "ХП:", ac: "КД:", gold: "Золото:", 
                 map: "🗺️ <b>GPS Навигация (Карта активна):</b>", status: "Состояние:", 
                 deathsaves: "Спасброски от смерти:", statsTitle: "Характеристики", invTitle: "Инвентарь и Экипировка", 
-                skillsTitle: "Навыки и Действия"
+                skillsTitle: "Навыки и Действия", magic: "✨ Магия:", slots: "Ячейки:"
             },
             uk: { 
                 loading: "Завантаження...", age: "👤 Вік:", level: "Рівень:", insp: "Натхнення:", 
                 race: "Раса:", cls: "Клас:", hp: "ХП:", ac: "AC:", gold: "Золото:", 
                 map: "🗺️ <b>GPS Навігація (Мапа активна):</b>", status: "Стан:", 
                 deathsaves: "Рятівні кидки від смерті:", statsTitle: "Характеристики", invTitle: "Інвентар та Екіпірування", 
-                skillsTitle: "Навички та Дії"
+                skillsTitle: "Навички та Дії", magic: "✨ Магія:", slots: "Комірки:"
             }
         };
 
@@ -277,11 +277,14 @@
             if(data.inventory) invText += "\n🎒 " + data.inventory;
             document.getElementById('inventory').innerText = invText || "-";
 
-            // Навички та Дії
+            // Навички та Дії (динамічний переклад магії)
             let skillsText = "";
             if(data.skills) skillsText += "🎯 " + data.skills + "\n";
             if(data.actions) skillsText += "\n⚡ " + data.actions;
-            if(data.spells && data.spells !== "-") skillsText += "\n\n✨ Магія: " + data.spells + " (Комірки: " + data.spell_slots + ")";
+            if(data.spells && data.spells !== "-") {
+                const slotsText = data.spell_slots ? data.spell_slots : "0";
+                skillsText += `\n\n${t.magic} ${data.spells} (${t.slots} ${slotsText})`;
+            }
             document.getElementById('skills').innerText = skillsText || "-";
 
             // Секретна мапа (ГМ-трекер)
