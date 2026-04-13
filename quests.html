@@ -2,66 +2,96 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quest Journal</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e24;
-            --text-color: #e0e0e0;
-            --accent-color: #d4af37; /* Золотий колір D&D */
-            --border-color: #333;
+            --bg-color: #0f0f13; /* Глибокий темний фон */
+            --card-bg: #1c1c24; /* Колір карток */
+            --text-color: #dcdcdc;
+            --accent-color: #d4af37; /* Золото Omni-Crown */
+            --border-color: #2a2a35;
+            --highlight: #e8c356;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 15px;
-            line-height: 1.6;
+            padding: 16px;
+            line-height: 1.5;
         }
+
         h1 {
             text-align: center;
             color: var(--accent-color);
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-top: 5px;
-            font-size: 22px;
+            font-size: 20px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            margin-top: 5px;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
+
         .section {
             background-color: var(--card-bg);
             border-radius: 12px;
-            padding: 16px;
+            padding: 18px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
             border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
+
         .section h2 {
-            color: var(--accent-color);
-            font-size: 18px;
+            color: var(--highlight);
+            font-size: 16px;
             margin-top: 0;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
         .content {
-            font-size: 15px;
+            font-size: 14px;
+            color: #b0b0bc;
             white-space: pre-wrap;
-            color: #cccccc;
         }
+
+        /* Стилі для списку квестів */
+        .quest-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .quest-list li {
+            margin-bottom: 12px;
+            position: relative;
+        }
+        
+        .quest-list li::marker {
+            color: var(--accent-color);
+        }
+
         .empty-state {
             text-align: center;
             font-style: italic;
-            color: #777;
+            color: #666;
             display: block;
-            padding: 10px 0;
+            padding: 15px 0;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
         }
+
         .error-state {
-            color: #cc0000;
+            color: #ff4d4d;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -80,84 +110,120 @@
     </div>
 
     <script>
+        // 1. Ініціалізація Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.setHeaderColor('#121212');
-        tg.setBackgroundColor('#121212');
+        tg.ready();
+        tg.setHeaderColor('#0f0f13');
+        tg.setBackgroundColor('#0f0f13');
 
-        // 1. Спочатку розпаковуємо дані з Base64, щоб дістати мову (data.lang)
+        // 2. Безпечний парсер Base64 (підтримує всі символи кирилиці)
+        function safeDecodeBase64(b64) {
+            try {
+                return decodeURIComponent(atob(b64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) {
+                console.error("Decode Error:", e);
+                return null;
+            }
+        }
+
+        // 3. Розпакування даних з URL
         const params = new URLSearchParams(window.location.search);
         const b64Param = params.get("b64");
         let data = {};
 
         if (b64Param) {
-            try {
-                // Безпечне декодування Base64 з підтримкою кирилиці
-                const decodedStr = decodeURIComponent(escape(window.atob(b64Param)));
-                data = JSON.parse(decodedStr);
-            } catch (e) {
-                console.error("Decode Error:", e);
+            const decodedStr = safeDecodeBase64(b64Param);
+            if (decodedStr) {
+                try {
+                    data = JSON.parse(decodedStr);
+                } catch (e) {
+                    console.error("JSON Parse Error:", e);
+                }
             }
         }
 
-        // 2. Словник локалізації UI
+        // 4. Локалізація
         const dict = {
             en: { 
                 title: "📜 HERO'S JOURNAL", quests: "🎯 Active Quests", lore: "🌍 World Compendium", 
-                emptyQ: "No active quests.", emptyL: "The world is unknown. Explore!", 
-                loading: "Loading...", errData: "❌ Data corrupted or missing." 
+                emptyQ: "No active quests. Talk to NPCs to find work.", emptyL: "The world is yet unknown. Explore!", 
+                loading: "Loading data...", errData: "❌ Data corrupted or missing." 
             },
             ru: { 
                 title: "📜 ЖУРНАЛ ГЕРОЯ", quests: "🎯 Активные Задания", lore: "🌍 Мировой Справочник", 
-                emptyQ: "Нет активных заданий.", emptyL: "Мир пока неизвестен. Исследуйте!", 
+                emptyQ: "Нет активных заданий. Поговорите с NPC.", emptyL: "Мир пока неизвестен. Исследуйте!", 
                 loading: "Загрузка...", errData: "❌ Данные повреждены или не найдены." 
             },
             uk: { 
                 title: "📜 ЖУРНАЛ ГЕРОЯ", quests: "🎯 Активні Завдання", lore: "🌍 Світовий Довідник", 
-                emptyQ: "Немає активних завдань.", emptyL: "Світ поки невідомий. Досліджуйте!", 
+                emptyQ: "Немає активних завдань. Шукайте роботу в NPC.", emptyL: "Світ поки невідомий. Досліджуйте!", 
                 loading: "Завантаження...", errData: "❌ Дані пошкоджено або не знайдено." 
             }
         };
 
-        // 3. ВИЗНАЧЕННЯ МОВИ: Пріоритет - налаштування бота (data.lang), потім Telegram
-        let userLang = data.lang || tg.initDataUnsafe?.user?.language_code || 'uk';
-        if (!dict[userLang]) userLang = 'uk'; // Fallback
-        const t = dict[userLang];
+        const userLang = data.lang || (tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.language_code : 'uk');
+        const t = dict[userLang] || dict['uk'];
 
-        // 4. Перекладаємо статичні заголовки
+        // Застосування перекладів
         document.getElementById('main-title').innerText = t.title;
         document.getElementById('quests-title').innerText = t.quests;
         document.getElementById('lore-title').innerText = t.lore;
 
-        // 5. Вивід контенту
-        if (b64Param && Object.keys(data).length > 0) {
-            // Розумна перевірка на "порожнечу" (розуміє Укр, Англ і Рос заглушки)
-            const isDefault = (str) => {
-                if (!str || str.trim() === "" || str === "-") return true;
-                const lower = str.toLowerCase();
-                return lower.includes("немає активних завдань") || 
-                       lower.includes("світ поки невідомий") || 
-                       lower.includes("no active quests") || 
-                       lower.includes("world is yet unknown") || 
-                       lower.includes("нет активных заданий") || 
-                       lower.includes("мир пока неизвестен");
-            };
+        // 5. Розумний аналізатор "порожнечі"
+        const isDefaultOrEmpty = (input) => {
+            if (!input || input.length === 0 || input === "-") return true;
+            
+            let str = Array.isArray(input) ? input.join(' ') : String(input);
+            if (str.trim() === "") return true;
+            
+            const lower = str.toLowerCase();
+            const badPhrases = [
+                "немає активних", "світ поки невідомий", "no active", 
+                "world is yet unknown", "нет активных", "мир пока неизвестен"
+            ];
+            return badPhrases.some(phrase => lower.includes(phrase));
+        };
 
-            // Вивід Квестів
-            if (!isDefault(data.quests_active)) {
-                document.getElementById('quests').innerText = data.quests_active;
+        // 6. Вивід даних
+        if (Object.keys(data).length > 0) {
+            
+            // --- СЕКЦІЯ КВЕСТІВ ---
+            const questsEl = document.getElementById('quests');
+            let qData = data.quests_active;
+            
+            if (!isDefaultOrEmpty(qData)) {
+                if (Array.isArray(qData)) {
+                    // Якщо масив: робимо красивий HTML список
+                    let htmlList = '<ul class="quest-list">';
+                    qData.forEach(quest => {
+                        if(quest.trim() !== "") htmlList += `<li>${quest}</li>`;
+                    });
+                    htmlList += '</ul>';
+                    questsEl.innerHTML = htmlList;
+                } else {
+                    // Якщо текст: просто виводимо
+                    questsEl.innerText = qData;
+                }
             } else {
-                document.getElementById('quests').innerHTML = `<span class="empty-state">${t.emptyQ}</span>`;
+                questsEl.innerHTML = `<span class="empty-state">${t.emptyQ}</span>`;
             }
 
-            // Вивід Довідника
-            if (!isDefault(data.world_knowledge)) {
-                document.getElementById('lore').innerText = data.world_knowledge;
+            // --- СЕКЦІЯ ЛОРУ ---
+            const loreEl = document.getElementById('lore');
+            let lData = data.world_knowledge;
+
+            if (!isDefaultOrEmpty(lData)) {
+                // Якщо лор прийшов масивом (на всяк випадок), з'єднуємо з перенесенням рядка
+                loreEl.innerText = Array.isArray(lData) ? lData.join('\n\n') : lData;
             } else {
-                document.getElementById('lore').innerHTML = `<span class="empty-state">${t.emptyL}</span>`;
+                loreEl.innerHTML = `<span class="empty-state">${t.emptyL}</span>`;
             }
 
         } else {
+            // Помилка завантаження даних
             document.getElementById('quests').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
             document.getElementById('lore').innerHTML = `<span class="empty-state error-state">${t.errData}</span>`;
         }
